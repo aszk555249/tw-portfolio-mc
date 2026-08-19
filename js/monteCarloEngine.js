@@ -54,9 +54,21 @@ class MonteCarloEngine {
       // 進階多時期排程
       cashflowStages = [],
 
+      // 槓桿與負債投資設定 (信貸本息攤還、股票質押只繳息、期貨槓桿)
+      enableDebt = false,
+      debtPlans = [],
+
       // 資產配置清單
       assets = []
     } = config;
+
+    // 0. 建立借貸與槓桿排程
+    const debtSchedule = this._buildDebtSchedule(enableDebt ? debtPlans : [], years);
+    const hasDebt = enableDebt && Array.isArray(debtPlans) && debtPlans.some(p => (parseFloat(p.amount) || 0) > 0);
+    const debtSummary = this._buildDebtSummary(enableDebt ? debtPlans : []);
+    const initialBorrowing = hasDebt ? (debtSchedule[1]?.newBorrowing || 0) : 0;
+    const startingAssets = initialInvestment + initialBorrowing;
+    const initialDebt = hasDebt ? (debtSchedule[0]?.totalDebtBalance || 0) : 0;
 
     // 1. 正規化資產權重
     const totalWeight = assets.reduce((sum, a) => sum + (parseFloat(a.weight) || 0), 0);
@@ -77,8 +89,12 @@ class MonteCarloEngine {
     }
 
     // 3. 準備模擬資料容器
-    const nominalTrajectories = new Array(trials);
-    const realTrajectories = new Array(trials);
+    const nominalTrajectories = new Array(trials); // 淨資產軌跡 (名目)
+    const realTrajectories = new Array(trials);    // 淨資產軌跡 (實質)
+    const assetsTrajectoriesNominal = new Array(trials); // 總資產軌跡 (名目)
+    const assetsTrajectoriesReal = new Array(trials);    // 總資產軌跡 (實質)
+    const debtTrajectoriesNominal = new Array(trials);   // 總負債軌跡 (名目)
+    const debtTrajectoriesReal = new Array(trials);      // 總負債軌跡 (實質)
     const yearlyCashflowsNominal = new Array(trials);
     const yearlyCashflowsReal = new Array(trials);
     
@@ -109,10 +125,14 @@ class MonteCarloEngine {
     for (let t = 0; t < trials; t++) {
       const trialNominal = [initialInvestment];
       const trialReal = [initialInvestment];
+      const trialAssetsNom = [startingAssets];
+      const trialAssetsRealArr = [startingAssets];
+      const trialDebtNom = [initialDebt];
+      const trialDebtRealArr = [initialDebt];
       const trialCashflowNom = [0];
       const trialCashflowReal = [0];
 
-      let currentNominal = initialInvestment;
+      let currentAssets = startingAssets;
       let pureAssetIndex = 1000.0; // 純資產淨值指數 (用於計算排除現金流之最大回撤)
       let peakNominal = initialInvestment;
       let peakPureAsset = 1000.0;
@@ -128,9 +148,20 @@ class MonteCarloEngine {
 
       let withdrawalStates = {};
       let prevSimpleWithdrawal = (customWithdrawalAmount > 0) ? customWithdrawalAmount : (initialInvestment * withdrawalRate);
-      let currentAssetHoldings = normalizedAssets.map(a => currentNominal * a.weight);
+      let currentAssetHoldings = normalizedAssets.map(a => currentAssets * a.weight);
 
       for (let y = 1; y <= years; y++) {
+        // --- 0. 借款注入 (若該年有新借款注入，且 y > 1) ---
+        if (hasDebt && y > 1 && debtSchedule[y]?.newBorrowing > 0) {
+          const newBorrowingAmt = debtSchedule[y].newBorrowing;
+          currentAssets += newBorrowingAmt;
+          if (rebalanceFrequency === 'never') {
+            for (let i = 0; i < currentAssetHoldings.length; i++) {
+              currentAssetHoldings[i] += newBorrowingAmt * normalizedAssets[i].weight;
+            }
+          }
+        }
+
         // --- A. 決定當年各資產報酬率與通膨率 ---
         let assetReturns = [];
         let yearInflation = inflationRate;
@@ -194,43 +225,39 @@ class MonteCarloEngine {
           if (dd > maxDDPureAsset) maxDDPureAsset = dd;
         }
 
-        // --- C. Bug1 Fix: 先套用報酬率讓資產成長，再處理現金流 ---
-        // 正確財務順序：年初資產 × 本年報酬率 → 年底加/扣現金流
-        if (currentNominal > 0) {
+        // --- C. 先套用報酬率讓總資產成長，再處理現金流與還款 ---
+        if (currentAssets > 0) {
           if (rebalanceFrequency === 'annual') {
-            currentNominal *= (1 + portfolioNetReturn);
+            currentAssets *= (1 + portfolioNetReturn);
           } else {
-            // Bug3 Fix: 不再平衡模式，各資產個別成長後，整體費用率只扣一次
             let newTotal = 0;
             for (let i = 0; i < currentAssetHoldings.length; i++) {
               currentAssetHoldings[i] = Math.max(0, currentAssetHoldings[i]) * (1 + assetReturns[i]);
               newTotal += currentAssetHoldings[i];
             }
-            // 整體扣除費用率（非各資產重複各扣一次，修正重複計算 Bug）
             const afterFeeTotal = newTotal * (1 - expenseRatio);
             const feeScale = newTotal > 0 ? (afterFeeTotal / newTotal) : 1;
             for (let i = 0; i < currentAssetHoldings.length; i++) {
               currentAssetHoldings[i] *= feeScale;
             }
-            currentNominal = afterFeeTotal;
+            currentAssets = afterFeeTotal;
           }
         }
 
-        // --- D. Bug1 Fix: 報酬率套用後，再處理現金流 ---
+        // --- D. 處理常態現金流 (累積期投入 / 退休提領) ---
         let netCashflowNominal = 0;
 
-        if (currentNominal <= 0) {
-          // 資產已歸零：標記破產並鎖定
+        if (currentAssets <= 0) {
           if (!isRuined) {
             isRuined = true;
             ruinedYear = y;
           }
-          currentNominal = 0;
+          currentAssets = 0;
         } else {
           if (cashflowPlannerMode === 'advanced') {
             // 進階多時期排程
             cashflowStages.forEach((stage, sIdx) => {
-              if (currentNominal <= 0) return;
+              if (currentAssets <= 0) return;
 
               if (stage.type === 'periodic_contribution') {
                 if (y >= stage.startYear && y <= stage.endYear) {
@@ -253,14 +280,14 @@ class MonteCarloEngine {
                   const wKey = `stage_${sIdx}`;
                   if (!withdrawalStates[wKey]) {
                     withdrawalStates[wKey] = {
-                      initialBalance: currentNominal,
-                      prevWithdrawal: (stage.customAmount > 0) ? stage.customAmount : (currentNominal * (stage.rate || 0.04)),
+                      initialBalance: currentAssets,
+                      prevWithdrawal: (stage.customAmount > 0) ? stage.customAmount : (currentAssets * (stage.rate || 0.04)),
                       initialRate: stage.rate || 0.04
                     };
                   }
                   const wState = withdrawalStates[wKey];
                   let withdrawalAmt = 0;
-                  const startYearBalance = currentNominal;
+                  const startYearBalance = currentAssets;
 
                   switch (stage.withdrawalType) {
                     case 'fixed_amount': {
@@ -300,14 +327,7 @@ class MonteCarloEngine {
               }
             });
 
-            currentNominal += netCashflowNominal;
-            if (currentNominal < 0) {
-              currentNominal = 0;
-              if (!isRuined) {
-                isRuined = true;
-                ruinedYear = y;
-              }
-            }
+            currentAssets += netCashflowNominal;
           } else {
             // 標準生命週期模式 (累積期 → 退休提領期)
             const rStartYear = typeof retirementStartYear !== 'undefined' 
@@ -321,12 +341,11 @@ class MonteCarloEngine {
                 ? contributionAmount * 12 
                 : contributionAmount) * annualGrowthFactor;
               netCashflowNominal = annualContrib;
-              currentNominal += netCashflowNominal;
+              currentAssets += netCashflowNominal;
             } else {
               // 階段 2：退休提領期
-              const startYearBalance = currentNominal;
+              const startYearBalance = currentAssets;
               if (y === rStartYear) {
-                // Bug2 Fix: 退休開始年才依當時本金設定提領金額，而非用初始本金
                 prevSimpleWithdrawal = (customWithdrawalAmount > 0) 
                   ? customWithdrawalAmount 
                   : (startYearBalance * withdrawalRate);
@@ -371,56 +390,91 @@ class MonteCarloEngine {
 
               prevSimpleWithdrawal = currentWithdrawal;
               netCashflowNominal = -currentWithdrawal;
-              currentNominal += netCashflowNominal;
-              if (currentNominal < 0) {
-                currentNominal = 0;
-                if (!isRuined) {
-                  isRuined = true;
-                  ruinedYear = y;
-                }
-              }
-            }
-
-            // 不再平衡模式：按比例將現金流分配到各資產持倉
-            if (rebalanceFrequency === 'never' && netCashflowNominal !== 0) {
-              const preTotal = currentAssetHoldings.reduce((s, h) => s + h, 0);
-              if (preTotal > 0) {
-                for (let i = 0; i < currentAssetHoldings.length; i++) {
-                  const share = currentAssetHoldings[i] / preTotal;
-                  currentAssetHoldings[i] = Math.max(0, currentAssetHoldings[i] + netCashflowNominal * share);
-                }
-              }
+              currentAssets += netCashflowNominal;
             }
           }
         }
 
-        // 更新含現金流的最大回撤（現金流套用後才做，反映真實投資人帳戶曲線）
-        if (currentNominal > peakNominal) {
-          peakNominal = currentNominal;
+        // --- E. 負債償還與利息支付 ---
+        const portfolioDebtService = hasDebt ? debtSchedule[y].portfolioDebtService : 0;
+        const totalDebtBalance = hasDebt ? debtSchedule[y].totalDebtBalance : 0;
+
+        if (portfolioDebtService > 0) {
+          currentAssets -= portfolioDebtService;
+        }
+        const totalNetCashflowNominal = netCashflowNominal - portfolioDebtService;
+
+        if (currentAssets < 0) {
+          currentAssets = 0;
+          if (!isRuined) {
+            isRuined = true;
+            ruinedYear = y;
+          }
+        }
+
+        // 不再平衡模式：按比例將現金流分配到各資產持倉
+        if (rebalanceFrequency === 'never' && totalNetCashflowNominal !== 0) {
+          const preTotal = currentAssetHoldings.reduce((s, h) => s + h, 0);
+          if (preTotal > 0) {
+            for (let i = 0; i < currentAssetHoldings.length; i++) {
+              const share = currentAssetHoldings[i] / preTotal;
+              currentAssetHoldings[i] = Math.max(0, currentAssetHoldings[i] + totalNetCashflowNominal * share);
+            }
+          }
+        }
+
+        // 計算淨資產 (Net Worth = 總資產 - 剩餘負債)
+        let currentNetWorth = currentAssets - totalDebtBalance;
+        if (currentNetWorth <= 0 && totalDebtBalance > 0 && currentAssets <= 0) {
+          if (!isRuined) {
+            isRuined = true;
+            ruinedYear = y;
+          }
+        }
+
+        // 更新含現金流與負債的最大回撤 (以淨資產反映真實身價回撤)
+        const activeNominalMeasure = hasDebt ? currentNetWorth : currentAssets;
+        if (activeNominalMeasure > peakNominal) {
+          peakNominal = activeNominalMeasure;
         } else if (peakNominal > 0) {
-          const dd = (peakNominal - currentNominal) / peakNominal;
+          const dd = (peakNominal - activeNominalMeasure) / peakNominal;
           if (dd > maxDDWithCashflow) maxDDWithCashflow = dd;
         }
 
-        // Bug6 Fix: 存活率計算 — 一旦破產就永久記錄為已滅失，避免市場反彈後誤計為存活
-        if (currentNominal > (minEndingBalance || 0) && !isRuined) {
+        // 存活率判定 (淨資產大於最低門檻且未破產)
+        if (currentNetWorth > (minEndingBalance || 0) && !isRuined) {
           survivedCountByYear[y]++;
         }
 
-        const realValue = currentNominal / cumInflation;
-        const realCashflow = netCashflowNominal / cumInflation;
+        const realNetWorth = currentNetWorth / cumInflation;
+        const realAssets = currentAssets / cumInflation;
+        const realDebt = totalDebtBalance / cumInflation;
+        const realCashflow = totalNetCashflowNominal / cumInflation;
 
-        trialNominal.push(Math.round(currentNominal));
-        trialReal.push(Math.round(realValue));
-        trialCashflowNom.push(Math.round(netCashflowNominal));
+        trialNominal.push(Math.round(currentNetWorth));
+        trialReal.push(Math.round(realNetWorth));
+        trialAssetsNom.push(Math.round(currentAssets));
+        trialAssetsRealArr.push(Math.round(realAssets));
+        trialDebtNom.push(Math.round(totalDebtBalance));
+        trialDebtRealArr.push(Math.round(realDebt));
+        trialCashflowNom.push(Math.round(totalNetCashflowNominal));
         trialCashflowReal.push(Math.round(realCashflow));
       }
 
       // 儲存軌跡
       nominalTrajectories[t] = trialNominal;
       realTrajectories[t] = trialReal;
+      assetsTrajectoriesNominal[t] = trialAssetsNom;
+      assetsTrajectoriesReal[t] = trialAssetsRealArr;
+      debtTrajectoriesNominal[t] = trialDebtNom;
+      debtTrajectoriesReal[t] = trialDebtRealArr;
       yearlyCashflowsNominal[t] = trialCashflowNom;
       yearlyCashflowsReal[t] = trialCashflowReal;
+      maxDrawdownsWithCashflow[t] = maxDDWithCashflow;
+      maxDrawdownsPureAsset[t] = maxDDPureAsset;
+      endingNominalBalances[t] = trialNominal[years];
+      endingRealBalances[t] = trialReal[years];
+      if (isRuined) ruinYears.push(ruinedYear);
       maxDrawdownsWithCashflow[t] = maxDDWithCashflow;
       maxDrawdownsPureAsset[t] = maxDDPureAsset;
       endingNominalBalances[t] = trialNominal[years];
@@ -483,6 +537,10 @@ class MonteCarloEngine {
       adjustForInflation,
       nominalTrajectories,
       realTrajectories,
+      assetsTrajectoriesNominal,
+      assetsTrajectoriesReal,
+      debtTrajectoriesNominal,
+      debtTrajectoriesReal,
       yearlyCashflowsNominal,
       yearlyCashflowsReal,
       survivedCountByYear,
@@ -500,7 +558,10 @@ class MonteCarloEngine {
       maxDrawdownsWithCashflow,
       maxDrawdownsPureAsset,
       trialSWR,
-      trialPWR
+      trialPWR,
+      hasDebt,
+      debtSchedule,
+      debtSummary
     });
   }
 
@@ -511,6 +572,10 @@ class MonteCarloEngine {
       adjustForInflation,
       nominalTrajectories,
       realTrajectories,
+      assetsTrajectoriesNominal,
+      assetsTrajectoriesReal,
+      debtTrajectoriesNominal,
+      debtTrajectoriesReal,
       yearlyCashflowsNominal,
       yearlyCashflowsReal,
       survivedCountByYear,
@@ -528,13 +593,16 @@ class MonteCarloEngine {
       maxDrawdownsWithCashflow,
       maxDrawdownsPureAsset,
       trialSWR,
-      trialPWR
+      trialPWR,
+      hasDebt = false,
+      debtSchedule = [],
+      debtSummary = null
     } = data;
 
     const activeTrajectories = adjustForInflation ? realTrajectories : nominalTrajectories;
     const activeEnding = adjustForInflation ? endingRealBalances : endingNominalBalances;
 
-    // 1. 逐年資產百分位數軌跡
+    // 1. 逐年資產百分位數軌跡 (以淨資產為基準)
     const percentileYears = [];
     for (let y = 0; y <= years; y++) {
       const yearValues = activeTrajectories.map(traj => traj[y]).sort((a, b) => a - b);
@@ -644,12 +712,30 @@ class MonteCarloEngine {
       const cfNominalArr = yearlyCashflowsNominal.map(t => t[y]).sort((a, b) => a - b);
       const cfRealArr = yearlyCashflowsReal.map(t => t[y]).sort((a, b) => a - b);
 
+      const assetsNominalArr = assetsTrajectoriesNominal ? assetsTrajectoriesNominal.map(t => t[y]).sort((a, b) => a - b) : yearNominalArr;
+      const assetsRealArr = assetsTrajectoriesReal ? assetsTrajectoriesReal.map(t => t[y]).sort((a, b) => a - b) : yearRealArr;
+      const debtNominalArr = debtTrajectoriesNominal ? debtTrajectoriesNominal.map(t => t[y]).sort((a, b) => a - b) : [];
+      const debtRealArr = debtTrajectoriesReal ? debtTrajectoriesReal.map(t => t[y]).sort((a, b) => a - b) : [];
+
+      const medianNominalAssets = this._quantile(assetsNominalArr, 0.50);
+      const medianNominalDebt = debtNominalArr.length > 0 ? this._quantile(debtNominalArr, 0.50) : 0;
+      const pledgeDebt = debtSchedule[y]?.pledgeDebtBalance || 0;
+      const coverageRatio = pledgeDebt > 0 ? Math.round((medianNominalAssets / pledgeDebt) * 100) : null;
+
       yearlyTable.push({
         year: y,
         nominalBalance: this._quantile(yearNominalArr, 0.50),
         realBalance: this._quantile(yearRealArr, 0.50),
+        nominalAssets: medianNominalAssets,
+        realAssets: this._quantile(assetsRealArr, 0.50),
+        nominalDebt: medianNominalDebt,
+        realDebt: debtRealArr.length > 0 ? this._quantile(debtRealArr, 0.50) : 0,
         nominalCashflow: this._quantile(cfNominalArr, 0.50),
         realCashflow: this._quantile(cfRealArr, 0.50),
+        totalDebtService: debtSchedule[y]?.totalDebtService || 0,
+        portfolioDebtService: debtSchedule[y]?.portfolioDebtService || 0,
+        externalDebtService: debtSchedule[y]?.externalDebtService || 0,
+        coverageRatio,
         nominalP10: this._quantile(yearNominalArr, 0.10),
         nominalP90: this._quantile(yearNominalArr, 0.90),
         realP10: this._quantile(yearRealArr, 0.10),
@@ -671,7 +757,175 @@ class MonteCarloEngine {
       yearlyTable,
       trials,
       years,
-      adjustForInflation
+      adjustForInflation,
+      hasDebt,
+      debtSchedule,
+      debtSummary
+    };
+  }
+
+  /**
+   * 建立借貸與槓桿排程 (信貸、股票質押、期貨保證金槓桿)
+   */
+  static _buildDebtSchedule(debtPlans = [], years = 30) {
+    const schedule = [];
+    for (let y = 0; y <= years; y++) {
+      schedule.push({
+        year: y,
+        newBorrowing: 0,
+        portfolioDebtService: 0,
+        externalDebtService: 0,
+        totalDebtService: 0,
+        totalDebtBalance: 0,
+        pledgeDebtBalance: 0
+      });
+    }
+
+    if (!Array.isArray(debtPlans) || debtPlans.length === 0) {
+      return schedule;
+    }
+
+    debtPlans.forEach(plan => {
+      const amount = parseFloat(plan.amount) || 0;
+      if (amount <= 0) return;
+      const rate = Math.max(0, parseFloat(plan.interestRate) || 0);
+      const startYear = Math.max(1, parseInt(plan.startYear) || 1);
+      const duration = Math.max(1, parseInt(plan.durationYears) || 1);
+      const endYear = startYear + duration - 1;
+      const type = plan.type || 'personal_loan'; // 'personal_loan', 'stock_pledge', 'futures_margin'
+      const repaymentMode = plan.repaymentMode || (type === 'personal_loan' ? 'amortization' : 'rollover');
+      const cashflowSource = plan.cashflowSource || 'portfolio'; // 'portfolio' | 'external'
+
+      // 新增借款於 startYear 年初注入
+      if (startYear <= years) {
+        schedule[startYear].newBorrowing += amount;
+      }
+
+      // 逐年還款與年底負債餘額
+      for (let y = 1; y <= years; y++) {
+        let service = 0;
+        let balance = 0;
+
+        if (y < startYear) {
+          balance = 0;
+          service = 0;
+        } else if (type === 'personal_loan' || repaymentMode === 'amortization') {
+          // 信貸本息攤還 (Amortization)
+          if (y >= startYear && y <= endYear) {
+            const monthlyRate = rate / 12;
+            const totalMonths = duration * 12;
+            let monthlyPayment = 0;
+            if (monthlyRate > 0) {
+              monthlyPayment = amount * (monthlyRate * Math.pow(1 + monthlyRate, totalMonths)) / (Math.pow(1 + monthlyRate, totalMonths) - 1);
+            } else {
+              monthlyPayment = amount / totalMonths;
+            }
+            service = monthlyPayment * 12;
+
+            const elapsedYears = y - startYear + 1;
+            if (elapsedYears >= duration) {
+              balance = 0;
+            } else {
+              if (monthlyRate > 0) {
+                balance = amount * (Math.pow(1 + monthlyRate, totalMonths) - Math.pow(1 + monthlyRate, elapsedYears * 12)) / (Math.pow(1 + monthlyRate, totalMonths) - 1);
+              } else {
+                balance = amount * (1 - elapsedYears / duration);
+              }
+            }
+          } else {
+            balance = 0;
+            service = 0;
+          }
+        } else {
+          // 質押 / 期貨 (只繳息 / 到期一次還本 / 自動展延)
+          const annualInterest = amount * rate;
+
+          if (repaymentMode === 'bullet_repayment') {
+            if (y >= startYear && y < endYear) {
+              service = annualInterest;
+              balance = amount;
+            } else if (y === endYear) {
+              service = annualInterest + amount;
+              balance = 0;
+            } else {
+              service = 0;
+              balance = 0;
+            }
+          } else {
+            // rollover (只繳息到底)
+            if (y >= startYear) {
+              service = annualInterest;
+              balance = amount;
+            }
+          }
+        }
+
+        schedule[y].totalDebtService += service;
+        schedule[y].totalDebtBalance += balance;
+        if (cashflowSource === 'portfolio') {
+          schedule[y].portfolioDebtService += service;
+        } else {
+          schedule[y].externalDebtService += service;
+        }
+        if (type === 'stock_pledge') {
+          schedule[y].pledgeDebtBalance += balance;
+        }
+      }
+    });
+
+    // 年初 (Year 0) 負債餘額
+    schedule[0].totalDebtBalance = schedule[1].newBorrowing;
+    schedule[0].pledgeDebtBalance = debtPlans
+      .filter(p => (parseInt(p.startYear) || 1) === 1 && p.type === 'stock_pledge')
+      .reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+
+    return schedule;
+  }
+
+  /**
+   * 試算借貸總覽摘要 (總借款、每月總還款、每年總還款、總利息)
+   */
+  static _buildDebtSummary(debtPlans = []) {
+    let totalBorrowing = 0;
+    let totalMonthlyService = 0;
+    let totalAnnualService = 0;
+    let totalInterestPaid = 0;
+
+    debtPlans.forEach(plan => {
+      const amount = parseFloat(plan.amount) || 0;
+      if (amount <= 0) return;
+      const rate = Math.max(0, parseFloat(plan.interestRate) || 0);
+      const duration = Math.max(1, parseInt(plan.durationYears) || 1);
+      const type = plan.type || 'personal_loan';
+      const repaymentMode = plan.repaymentMode || (type === 'personal_loan' ? 'amortization' : 'rollover');
+
+      totalBorrowing += amount;
+
+      if (type === 'personal_loan' || repaymentMode === 'amortization') {
+        const monthlyRate = rate / 12;
+        const totalMonths = duration * 12;
+        let monthlyPayment = 0;
+        if (monthlyRate > 0) {
+          monthlyPayment = amount * (monthlyRate * Math.pow(1 + monthlyRate, totalMonths)) / (Math.pow(1 + monthlyRate, totalMonths) - 1);
+        } else {
+          monthlyPayment = amount / totalMonths;
+        }
+        totalMonthlyService += monthlyPayment;
+        totalAnnualService += monthlyPayment * 12;
+        totalInterestPaid += (monthlyPayment * totalMonths) - amount;
+      } else {
+        const monthlyInterest = (amount * rate) / 12;
+        totalMonthlyService += monthlyInterest;
+        totalAnnualService += amount * rate;
+        totalInterestPaid += (amount * rate) * duration;
+      }
+    });
+
+    return {
+      totalBorrowing,
+      totalMonthlyService: Math.round(totalMonthlyService),
+      totalAnnualService: Math.round(totalAnnualService),
+      totalInterestPaid: Math.round(totalInterestPaid)
     };
   }
 

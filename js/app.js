@@ -47,6 +47,22 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     ],
 
+    // 槓桿與借貸投資設定
+    enableDebt: false,
+    debtPlans: [
+      {
+        id: 'debt_init_1',
+        name: '7年信貸200萬',
+        type: 'personal_loan', // 'personal_loan', 'stock_pledge', 'futures_margin'
+        amount: 2000000,
+        interestRate: 0.022,
+        startYear: 1,
+        durationYears: 7,
+        repaymentMode: 'amortization', // 'amortization', 'rollover', 'bullet_repayment'
+        cashflowSource: 'portfolio'   // 'portfolio' (投組自償) or 'external' (外部自付)
+      }
+    ],
+
     assets: [
       { key: 'tw_large', weight: 50, expectedReturn: 0.108, stdev: 0.225 },
       { key: 'tw_dividend', weight: 50, expectedReturn: 0.092, stdev: 0.185 }
@@ -70,7 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
     chartTitleMode: document.getElementById('chart-title-mode'),
 
     btnExportCsv: document.getElementById('btn-export-csv'),
-    btnPrintReport: document.getElementById('btn-print-report'),
+    btnPrintReport: document.getElementById('btnPrintReport') || document.getElementById('btn-print-report'),
     btnTableDownloadCsv: document.getElementById('btn-table-download-csv'),
     btnPerfDownloadCsv: document.getElementById('btn-perf-download-csv'),
 
@@ -141,6 +157,21 @@ document.addEventListener('DOMContentLoaded', () => {
     btnAddStageWithdraw: document.getElementById('btn-add-stage-withdraw'),
     btnLoadTwStagePreset: document.getElementById('btn-load-tw-stage-preset'),
 
+    // 槓桿與借貸設定
+    checkEnableDebt: document.getElementById('check-enable-debt'),
+    labelEnableDebt: document.getElementById('label-enable-debt'),
+    debtConfigContainer: document.getElementById('debt-config-container'),
+    debtPlansList: document.getElementById('debt-plans-list'),
+    btnAddDebtPersonal: document.getElementById('btn-add-debt-personal'),
+    btnAddDebtPledge: document.getElementById('btn-add-debt-pledge'),
+    btnAddDebtFutures: document.getElementById('btn-add-debt-futures'),
+    debtSummaryBox: document.getElementById('debt-summary-box'),
+    debtSummaryLeverageRatio: document.getElementById('debt-summary-leverage-ratio'),
+    debtSummaryTotalLoan: document.getElementById('debt-summary-total-loan'),
+    debtSummaryInitialAssets: document.getElementById('debt-summary-initial-assets'),
+    debtSummaryMonthlyPay: document.getElementById('debt-summary-monthly-pay'),
+    debtSummaryTotalInterest: document.getElementById('debt-summary-total-interest'),
+
     // 資產配置
     selectRebalance: document.getElementById('select-rebalance'),
     assetRowsContainer: document.getElementById('asset-rows-container'),
@@ -185,6 +216,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initPresetSelector();
   renderAssetRows();
   renderCashflowStages();
+  renderDebtPlans();
   renderPortfolioModel();
   updateInflationIndicator();
   updateInflationExplanation();
@@ -194,6 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
   updateWithdrawalRateDesc();
   updateWithdrawalAmountDisplay();
   updateWithdrawalStrategyExplanation();
+  updateDebtSummary();
   bindEvents();
   runMonteCarlo();
 
@@ -552,6 +585,39 @@ document.addEventListener('DOMContentLoaded', () => {
     dom.btnAddStageLumpin.addEventListener('click', () => addCashflowStage('lump_sum_in'));
     dom.btnAddStageWithdraw.addEventListener('click', () => addCashflowStage('periodic_withdrawal'));
     dom.btnLoadTwStagePreset.addEventListener('click', loadStagePreset);
+
+    // 槓桿與借貸設定開關與按鈕
+    if (dom.checkEnableDebt) {
+      dom.checkEnableDebt.addEventListener('change', (e) => {
+        state.enableDebt = e.target.checked;
+        if (dom.labelEnableDebt) {
+          dom.labelEnableDebt.textContent = state.enableDebt ? '已啟用' : '未啟用';
+          dom.labelEnableDebt.className = state.enableDebt ? 'ml-2 text-xs font-black text-amber-700 dark:text-amber-400' : 'ml-2 text-xs font-bold text-slate-700 dark:text-slate-300';
+        }
+        if (dom.debtConfigContainer) {
+          dom.debtConfigContainer.classList.toggle('hidden', !state.enableDebt);
+        }
+        updateDebtSummary();
+        runMonteCarlo();
+      });
+    }
+
+    document.querySelectorAll('.btn-quick-debt-preset').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const preset = btn.dataset.preset;
+        loadDebtPreset(preset);
+      });
+    });
+
+    if (dom.btnAddDebtPersonal) {
+      dom.btnAddDebtPersonal.addEventListener('click', () => addDebtPlan('personal_loan'));
+    }
+    if (dom.btnAddDebtPledge) {
+      dom.btnAddDebtPledge.addEventListener('click', () => addDebtPlan('stock_pledge'));
+    }
+    if (dom.btnAddDebtFutures) {
+      dom.btnAddDebtFutures.addEventListener('click', () => addDebtPlan('futures_margin'));
+    }
 
     // 新增資產與配平按鈕
     dom.btnAddAsset.addEventListener('click', addCustomAsset);
@@ -1451,6 +1517,311 @@ document.addEventListener('DOMContentLoaded', () => {
     runMonteCarlo();
   }
 
+  // ================= 槓桿與借貸投資管理 (信貸、股票質押、期貨) =================
+
+  function renderDebtPlans() {
+    if (!dom.debtPlansList) return;
+    dom.debtPlansList.innerHTML = '';
+    const totalYears = parseInt(dom.inputYears.value) || 30;
+    const currSymbol = state.currency === 'TWD' ? 'NT$' : '$';
+
+    if (!state.debtPlans || state.debtPlans.length === 0) {
+      dom.debtPlansList.innerHTML = `
+        <div class="p-4 text-center text-sm text-amber-800/70 bg-amber-50/50 border border-dashed border-amber-300 rounded-2xl dark:text-amber-300/60 dark:bg-amber-950/20 dark:border-amber-800/40">
+          尚未新增借貸項目。請點擊下方按鈕新增「信貸」、「股票質押」或「期貨槓桿」。
+        </div>
+      `;
+      updateDebtSummary();
+      return;
+    }
+
+    state.debtPlans.forEach((plan, idx) => {
+      const card = document.createElement('div');
+      card.className = 'p-4 bg-white rounded-2xl border border-amber-200 shadow-2xs space-y-3 dark:bg-slate-800 dark:border-amber-800/50';
+
+      const type = plan.type || 'personal_loan';
+      const amount = parseFloat(plan.amount) || 0;
+      const ratePct = ((parseFloat(plan.interestRate) || 0) * 100).toFixed(2);
+      const startYear = parseInt(plan.startYear) || 1;
+      const duration = parseInt(plan.durationYears) || 7;
+      const repaymentMode = plan.repaymentMode || (type === 'personal_loan' ? 'amortization' : 'rollover');
+      const cashflowSource = plan.cashflowSource || 'portfolio';
+
+      let typeBadge = '';
+      let typeDesc = '';
+      let calcPreview = '';
+
+      if (type === 'personal_loan') {
+        typeBadge = `<span class="px-2 py-0.5 text-xs font-black bg-blue-100 text-blue-800 rounded-lg dark:bg-blue-900/40 dark:text-blue-300">🏦 信貸 (本息攤還)</span>`;
+        typeDesc = '等額本息攤還，每月本金隨期數遞減至 0';
+        const r_m = (parseFloat(plan.interestRate) || 0) / 12;
+        const n_m = duration * 12;
+        const pmt = r_m > 0 ? (amount * r_m * Math.pow(1 + r_m, n_m)) / (Math.pow(1 + r_m, n_m) - 1) : (amount / n_m);
+        const totalInt = (pmt * n_m) - amount;
+        calcPreview = `每月月付約 <strong>${currSymbol} ${Math.round(pmt).toLocaleString()}</strong> 元 (年還 ${currSymbol} ${formatCurrencyShort(pmt * 12)}) · 總利息 ${currSymbol} ${formatCurrencyShort(totalInt)}`;
+      } else if (type === 'stock_pledge') {
+        typeBadge = `<span class="px-2 py-0.5 text-xs font-black bg-amber-100 text-amber-800 rounded-lg dark:bg-amber-900/40 dark:text-amber-300">📈 股票質押 (只繳息)</span>`;
+        typeDesc = '只繳利息，維持率監控防斷頭';
+        const annualInt = amount * (parseFloat(plan.interestRate) || 0);
+        const monthlyInt = annualInt / 12;
+        calcPreview = `每月利息約 <strong>${currSymbol} ${Math.round(monthlyInt).toLocaleString()}</strong> 元 (年息 ${currSymbol} ${formatCurrencyShort(annualInt)}) · 到期: ${repaymentMode === 'rollover' ? '自動展延 (只繳息)' : '到期一次還本'}`;
+      } else {
+        typeBadge = `<span class="px-2 py-0.5 text-xs font-black bg-purple-100 text-purple-800 rounded-lg dark:bg-purple-900/40 dark:text-purple-300">⚡ 期貨保證金槓桿</span>`;
+        typeDesc = '以保證金放大名目曝險，負擔資金/轉倉成本';
+        const annualCost = amount * (parseFloat(plan.interestRate) || 0);
+        calcPreview = `每年資金摩擦成本約 <strong>${currSymbol} ${formatCurrencyShort(annualCost)}</strong> (每月約 ${currSymbol} ${Math.round(annualCost / 12).toLocaleString()} 元)`;
+      }
+
+      card.innerHTML = `
+        <div class="flex items-center justify-between border-b border-slate-100 pb-2 dark:border-slate-700/60">
+          <div class="flex items-center gap-2">
+            ${typeBadge}
+            <span class="text-xs text-slate-500 font-medium dark:text-slate-400">項目 ${idx + 1}</span>
+          </div>
+          <button type="button" class="btn-remove-debt text-slate-400 hover:text-rose-600 p-1 rounded-lg hover:bg-rose-50 transition dark:text-slate-500 dark:hover:bg-rose-900/30 dark:hover:text-rose-400" data-idx="${idx}" title="移除此借貸項目">
+            <i data-lucide="trash-2" class="w-4 h-4"></i>
+          </button>
+        </div>
+
+        <div class="grid grid-cols-12 gap-2.5 text-xs sm:text-sm">
+          <!-- 借款金額 -->
+          <div class="col-span-6 sm:col-span-4">
+            <label class="text-slate-600 font-bold block mb-1 dark:text-slate-400">借款本金/槓桿部位 (${currSymbol})</label>
+            <input type="number" step="50000" min="0" value="${amount}" class="debt-field w-full p-1.5 border border-slate-300 rounded-lg font-black text-amber-800 dark:bg-slate-900 dark:border-slate-600 dark:text-amber-300" data-idx="${idx}" data-prop="amount">
+          </div>
+
+          <!-- 年利率 -->
+          <div class="col-span-6 sm:col-span-3">
+            <label class="text-slate-600 font-bold block mb-1 dark:text-slate-400">年利率 / 資金成本 (%)</label>
+            <div class="flex items-center rounded-lg border border-slate-300 overflow-hidden dark:border-slate-600 dark:bg-slate-900">
+              <input type="number" step="0.05" min="0" max="25" value="${ratePct}" class="debt-field w-full p-1.5 font-bold text-slate-900 bg-transparent focus:outline-none dark:text-slate-100" data-idx="${idx}" data-prop="interestRate">
+              <span class="px-2 text-slate-500 font-bold text-xs">%</span>
+            </div>
+          </div>
+
+          <!-- 借款開始年份 -->
+          <div class="col-span-6 sm:col-span-2">
+            <label class="text-slate-600 font-bold block mb-1 dark:text-slate-400">借入年份</label>
+            <div class="flex items-center gap-1">
+              <span class="text-slate-500 text-xs">第</span>
+              <input type="number" min="1" max="${totalYears}" value="${startYear}" class="debt-field w-full p-1.5 border border-slate-300 rounded-lg text-center font-bold text-slate-900 dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100" data-idx="${idx}" data-prop="startYear">
+              <span class="text-slate-500 text-xs">年</span>
+            </div>
+          </div>
+
+          <!-- 借款年限 -->
+          <div class="col-span-6 sm:col-span-3">
+            <label class="text-slate-600 font-bold block mb-1 dark:text-slate-400">年限期數 (年)</label>
+            <div class="flex items-center gap-1">
+              <input type="number" min="1" max="60" value="${duration}" class="debt-field w-full p-1.5 border border-slate-300 rounded-lg text-center font-bold text-slate-900 dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100" data-idx="${idx}" data-prop="durationYears">
+              <span class="text-slate-500 text-xs">年</span>
+            </div>
+          </div>
+
+          <!-- 還款來源 -->
+          <div class="col-span-6 sm:col-span-6">
+            <label class="text-slate-600 font-bold block mb-1 dark:text-slate-400">還款金流來源</label>
+            <select class="debt-field w-full p-1.5 border border-slate-300 rounded-lg font-bold text-slate-900 dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100" data-idx="${idx}" data-prop="cashflowSource">
+              <option value="portfolio" ${cashflowSource === 'portfolio' ? 'selected' : ''}>從投資組合扣款 (投組自償)</option>
+              <option value="external" ${cashflowSource === 'external' ? 'selected' : ''}>由外部薪資支付 (外生自備款)</option>
+            </select>
+          </div>
+
+          <!-- 到期處理 -->
+          <div class="col-span-6 sm:col-span-6 ${type === 'personal_loan' ? 'opacity-60 pointer-events-none' : ''}">
+            <label class="text-slate-600 font-bold block mb-1 dark:text-slate-400">到期處理方式</label>
+            <select class="debt-field w-full p-1.5 border border-slate-300 rounded-lg font-bold text-slate-900 dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100" data-idx="${idx}" data-prop="repaymentMode">
+              <option value="rollover" ${repaymentMode === 'rollover' ? 'selected' : ''}>到期自動展延 (只繳息到底)</option>
+              <option value="bullet_repayment" ${repaymentMode === 'bullet_repayment' ? 'selected' : ''}>到期一次還本 (Bullet Repayment)</option>
+              ${type === 'personal_loan' ? '<option value="amortization" selected>本息攤還 (按月平均)</option>' : ''}
+            </select>
+          </div>
+
+          <!-- 即時試算預覽小列 -->
+          <div class="col-span-12 p-2 bg-amber-50/70 rounded-xl border border-amber-200/70 text-[11px] sm:text-xs text-amber-950 font-medium dark:bg-amber-950/20 dark:border-amber-800/40 dark:text-amber-200 flex items-center justify-between">
+            <span>💡 試算：${calcPreview}</span>
+            <span class="text-[10px] text-amber-700 font-bold dark:text-amber-400">${typeDesc}</span>
+          </div>
+        </div>
+      `;
+
+      dom.debtPlansList.appendChild(card);
+    });
+
+    lucide.createIcons();
+    bindDebtEvents();
+    updateDebtSummary();
+  }
+
+  function bindDebtEvents() {
+    document.querySelectorAll('.debt-field').forEach(input => {
+      input.addEventListener('change', (e) => {
+        const idx = parseInt(e.target.dataset.idx);
+        const prop = e.target.dataset.prop;
+        let val = e.target.value;
+
+        if (prop === 'interestRate') {
+          val = (parseFloat(val) || 0) / 100;
+        } else if (['amount', 'startYear', 'durationYears'].includes(prop)) {
+          val = parseFloat(val) || 0;
+        }
+        state.debtPlans[idx][prop] = val;
+        renderDebtPlans();
+        runMonteCarlo();
+      });
+    });
+
+    document.querySelectorAll('.btn-remove-debt').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = parseInt(btn.dataset.idx);
+        state.debtPlans.splice(idx, 1);
+        renderDebtPlans();
+        runMonteCarlo();
+      });
+    });
+  }
+
+  function addDebtPlan(type) {
+    const totalYears = parseInt(dom.inputYears.value) || 30;
+    if (type === 'personal_loan') {
+      state.debtPlans.push({
+        id: 'debt_' + Date.now(),
+        name: '信用貸款 (本息均攤)',
+        type: 'personal_loan',
+        amount: 1000000,
+        interestRate: 0.022,
+        startYear: 1,
+        durationYears: Math.min(7, totalYears),
+        repaymentMode: 'amortization',
+        cashflowSource: 'portfolio'
+      });
+    } else if (type === 'stock_pledge') {
+      state.debtPlans.push({
+        id: 'debt_' + Date.now(),
+        name: '股票質押借款',
+        type: 'stock_pledge',
+        amount: 1000000,
+        interestRate: 0.028,
+        startYear: 1,
+        durationYears: Math.min(5, totalYears),
+        repaymentMode: 'rollover',
+        cashflowSource: 'portfolio'
+      });
+    } else if (type === 'futures_margin') {
+      state.debtPlans.push({
+        id: 'debt_' + Date.now(),
+        name: '期貨保證金槓桿',
+        type: 'futures_margin',
+        amount: 1000000,
+        interestRate: 0.020,
+        startYear: 1,
+        durationYears: totalYears,
+        repaymentMode: 'rollover',
+        cashflowSource: 'portfolio'
+      });
+    }
+
+    if (!state.enableDebt) {
+      state.enableDebt = true;
+      if (dom.checkEnableDebt) dom.checkEnableDebt.checked = true;
+      if (dom.labelEnableDebt) {
+        dom.labelEnableDebt.textContent = '已啟用';
+        dom.labelEnableDebt.className = 'ml-2 text-xs font-black text-amber-700 dark:text-amber-400';
+      }
+      if (dom.debtConfigContainer) dom.debtConfigContainer.classList.remove('hidden');
+    }
+
+    renderDebtPlans();
+    runMonteCarlo();
+  }
+
+  function loadDebtPreset(presetKey) {
+    const totalYears = parseInt(dom.inputYears.value) || 30;
+    if (presetKey === 'loan_7y_200w') {
+      state.debtPlans = [
+        {
+          id: 'debt_p1',
+          name: '7年信貸200萬',
+          type: 'personal_loan',
+          amount: 2000000,
+          interestRate: 0.022,
+          startYear: 1,
+          durationYears: Math.min(7, totalYears),
+          repaymentMode: 'amortization',
+          cashflowSource: 'portfolio'
+        }
+      ];
+    } else if (presetKey === 'pledge_150w_roll') {
+      state.debtPlans = [
+        {
+          id: 'debt_p2',
+          name: '股票質押150萬 (只繳息展延)',
+          type: 'stock_pledge',
+          amount: 1500000,
+          interestRate: 0.028,
+          startYear: 1,
+          durationYears: Math.min(5, totalYears),
+          repaymentMode: 'rollover',
+          cashflowSource: 'portfolio'
+        }
+      ];
+    } else if (presetKey === 'futures_margin_100w') {
+      state.debtPlans = [
+        {
+          id: 'debt_p3',
+          name: '期貨保證金槓桿100萬',
+          type: 'futures_margin',
+          amount: 1000000,
+          interestRate: 0.020,
+          startYear: 1,
+          durationYears: totalYears,
+          repaymentMode: 'rollover',
+          cashflowSource: 'portfolio'
+        }
+      ];
+    }
+
+    if (!state.enableDebt) {
+      state.enableDebt = true;
+      if (dom.checkEnableDebt) dom.checkEnableDebt.checked = true;
+      if (dom.labelEnableDebt) {
+        dom.labelEnableDebt.textContent = '已啟用';
+        dom.labelEnableDebt.className = 'ml-2 text-xs font-black text-amber-700 dark:text-amber-400';
+      }
+      if (dom.debtConfigContainer) dom.debtConfigContainer.classList.remove('hidden');
+    }
+
+    renderDebtPlans();
+    runMonteCarlo();
+  }
+
+  function updateDebtSummary() {
+    if (!dom.debtSummaryBox) return;
+    const initialInv = parseFloat(dom.inputInitialAmount?.value) || 0;
+    const summary = MonteCarloEngine._buildDebtSummary(state.enableDebt ? state.debtPlans : []);
+    const curr = state.currency === 'TWD' ? 'NT$' : '$';
+
+    const totalBorrowing = summary.totalBorrowing;
+    const totalInitialAssets = initialInv + totalBorrowing;
+    const leverageRatio = initialInv > 0 ? (totalInitialAssets / initialInv).toFixed(2) : (totalBorrowing > 0 ? '純借貸' : '1.00');
+
+    if (dom.debtSummaryLeverageRatio) {
+      dom.debtSummaryLeverageRatio.textContent = `槓桿倍數 ${leverageRatio}x`;
+    }
+    if (dom.debtSummaryTotalLoan) {
+      dom.debtSummaryTotalLoan.textContent = `${curr} ${formatCurrencyShort(totalBorrowing)}`;
+    }
+    if (dom.debtSummaryInitialAssets) {
+      dom.debtSummaryInitialAssets.textContent = `${curr} ${formatCurrencyShort(totalInitialAssets)}`;
+    }
+    if (dom.debtSummaryMonthlyPay) {
+      dom.debtSummaryMonthlyPay.textContent = `${curr} ${summary.totalMonthlyService.toLocaleString()} 元/月`;
+    }
+    if (dom.debtSummaryTotalInterest) {
+      dom.debtSummaryTotalInterest.textContent = `${curr} ${formatCurrencyShort(summary.totalInterestPaid)}`;
+    }
+  }
+
   // ================= 資產列表管理 =================
 
   function renderAssetRows() {
@@ -1683,8 +2054,10 @@ document.addEventListener('DOMContentLoaded', () => {
         config.minEndingBalance = parseFloat(dom.inputMinBalance?.value) || 0;
         config.withdrawalAdjustInflation = dom.checkWithdrawalInflation?.checked ?? true;
 
-        // 多時期進階排程 & 資產配置
+        // 多時期進階排程 & 借貸設定 & 資產配置
         config.cashflowStages = state.cashflowStages;
+        config.enableDebt = state.enableDebt;
+        config.debtPlans = state.debtPlans;
         config.assets = state.assets;
 
         const results = MonteCarloEngine.runSimulation(config);
@@ -1772,9 +2145,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // 7. 產出專業解讀評語
     renderInsights(results);
 
-    // 8. 更新提領率即時金額換算卡片
+    // 8. 更新提領率即時金額換算卡片與借貸總覽
     updateWithdrawalRateDisplay();
     updateWithdrawalStrategyExplanation();
+    updateDebtSummary();
   }
 
   // ================= 圖表與表格渲染 =================
@@ -2073,19 +2447,70 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderYearlyTable(results) {
     dom.yearlyTableBody.innerHTML = '';
     const curr = state.currency === 'TWD' ? 'NT$' : '$';
+    const hasDebt = results.hasDebt;
+
+    // 動態更新表頭以完整呈現槓桿資產與負債欄位
+    const thead = dom.yearlyTableBody.closest('table')?.querySelector('thead');
+    if (thead) {
+      if (hasDebt) {
+        thead.innerHTML = `
+          <tr>
+            <th class="py-2.5 px-3">年份</th>
+            <th class="py-2.5 px-3 font-black text-blue-700 dark:text-blue-400">實質淨資產</th>
+            <th class="py-2.5 px-3 text-indigo-700 font-bold dark:text-indigo-400">實質總資產</th>
+            <th class="py-2.5 px-3 text-amber-700 font-bold dark:text-amber-400">實質總負債</th>
+            <th class="py-2.5 px-3 text-rose-700 font-bold dark:text-rose-400">負債還款/利息</th>
+            <th class="py-2.5 px-3 font-bold">當年淨現金流</th>
+            <th class="py-2.5 px-3 text-purple-700 font-bold dark:text-purple-400">質押維持率</th>
+            <th class="py-2.5 px-3 font-bold text-slate-900 dark:text-slate-100">名目淨資產</th>
+          </tr>
+        `;
+      } else {
+        thead.innerHTML = `
+          <tr>
+            <th class="py-2.5 px-3">年份</th>
+            <th class="py-2.5 px-3 font-black text-blue-700 dark:text-blue-400">實質中位數資產</th>
+            <th class="py-2.5 px-3 text-emerald-700 font-bold dark:text-emerald-400">實質 90% 樂觀</th>
+            <th class="py-2.5 px-3 text-rose-700 font-bold dark:text-rose-400">實質 10% 悲觀</th>
+            <th class="py-2.5 px-3 font-bold">當年實質淨現金流</th>
+            <th class="py-2.5 px-3 font-bold text-slate-900 dark:text-slate-100">名目中位數資產</th>
+            <th class="py-2.5 px-3 text-slate-600 font-bold dark:text-slate-400">名目淨現金流</th>
+          </tr>
+        `;
+      }
+    }
 
     results.yearlyTable.forEach(row => {
       const tr = document.createElement('tr');
       tr.className = 'hover:bg-slate-50/90 transition text-sm dark:hover:bg-slate-700/50';
-      tr.innerHTML = `
-        <td class="py-3 px-3.5 font-bold text-slate-800 dark:text-slate-200">第 ${row.year} 年</td>
-        <td class="py-3 px-3.5 font-black text-blue-700 dark:text-blue-400">${curr} ${formatCurrencyShort(row.realBalance)}</td>
-        <td class="py-3 px-3.5 text-emerald-700 font-bold dark:text-emerald-400">${curr} ${formatCurrencyShort(row.realP90)}</td>
-        <td class="py-3 px-3.5 text-rose-700 font-bold dark:text-rose-400">${curr} ${formatCurrencyShort(row.realP10)}</td>
-        <td class="py-3 px-3.5 text-slate-700 font-semibold dark:text-slate-300">${row.realCashflow !== 0 ? ((row.realCashflow > 0 ? '+' : '') + curr + ' ' + formatCurrencyShort(row.realCashflow)) : '--'}</td>
-        <td class="py-3 px-3.5 font-bold text-slate-900 dark:text-slate-100">${curr} ${formatCurrencyShort(row.nominalBalance)}</td>
-        <td class="py-3 px-3.5 text-slate-600 font-medium dark:text-slate-400">${row.nominalCashflow !== 0 ? ((row.nominalCashflow > 0 ? '+' : '') + curr + ' ' + formatCurrencyShort(row.nominalCashflow)) : '--'}</td>
-      `;
+
+      if (hasDebt) {
+        const covText = row.coverageRatio !== null ? `${row.coverageRatio}%` : '--';
+        const covClass = row.coverageRatio !== null
+          ? (row.coverageRatio < 130 ? 'text-rose-600 font-black dark:text-rose-400' : (row.coverageRatio < 166 ? 'text-amber-600 font-bold dark:text-amber-400' : 'text-emerald-700 font-bold dark:text-emerald-400'))
+          : 'text-slate-400';
+
+        tr.innerHTML = `
+          <td class="py-3 px-3.5 font-bold text-slate-800 dark:text-slate-200">第 ${row.year} 年</td>
+          <td class="py-3 px-3.5 font-black text-blue-700 dark:text-blue-400">${curr} ${formatCurrencyShort(row.realBalance)}</td>
+          <td class="py-3 px-3.5 font-bold text-indigo-700 dark:text-indigo-400">${curr} ${formatCurrencyShort(row.realAssets ?? row.realBalance)}</td>
+          <td class="py-3 px-3.5 font-bold text-amber-700 dark:text-amber-400">${row.realDebt > 0 ? (curr + ' ' + formatCurrencyShort(row.realDebt)) : '--'}</td>
+          <td class="py-3 px-3.5 font-bold text-rose-700 dark:text-rose-400">${row.totalDebtService > 0 ? (curr + ' ' + formatCurrencyShort(row.totalDebtService)) : '--'}</td>
+          <td class="py-3 px-3.5 text-slate-700 font-semibold dark:text-slate-300">${row.realCashflow !== 0 ? ((row.realCashflow > 0 ? '+' : '') + curr + ' ' + formatCurrencyShort(row.realCashflow)) : '--'}</td>
+          <td class="py-3 px-3.5 ${covClass}">${covText}</td>
+          <td class="py-3 px-3.5 font-bold text-slate-900 dark:text-slate-100">${curr} ${formatCurrencyShort(row.nominalBalance)}</td>
+        `;
+      } else {
+        tr.innerHTML = `
+          <td class="py-3 px-3.5 font-bold text-slate-800 dark:text-slate-200">第 ${row.year} 年</td>
+          <td class="py-3 px-3.5 font-black text-blue-700 dark:text-blue-400">${curr} ${formatCurrencyShort(row.realBalance)}</td>
+          <td class="py-3 px-3.5 text-emerald-700 font-bold dark:text-emerald-400">${curr} ${formatCurrencyShort(row.realP90)}</td>
+          <td class="py-3 px-3.5 text-rose-700 font-bold dark:text-rose-400">${curr} ${formatCurrencyShort(row.realP10)}</td>
+          <td class="py-3 px-3.5 text-slate-700 font-semibold dark:text-slate-300">${row.realCashflow !== 0 ? ((row.realCashflow > 0 ? '+' : '') + curr + ' ' + formatCurrencyShort(row.realCashflow)) : '--'}</td>
+          <td class="py-3 px-3.5 font-bold text-slate-900 dark:text-slate-100">${curr} ${formatCurrencyShort(row.nominalBalance)}</td>
+          <td class="py-3 px-3.5 text-slate-600 font-medium dark:text-slate-400">${row.nominalCashflow !== 0 ? ((row.nominalCashflow > 0 ? '+' : '') + curr + ' ' + formatCurrencyShort(row.nominalCashflow)) : '--'}</td>
+        `;
+      }
       dom.yearlyTableBody.appendChild(tr);
     });
   }
@@ -2099,6 +2524,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let items = [];
 
+    if (results.hasDebt && results.debtSummary) {
+      const initAssets = results.yearlyTable[0]?.nominalAssets || (initialInv + results.debtSummary.totalBorrowing);
+      const levRatio = initialInv > 0 ? (initAssets / initialInv).toFixed(2) : '純借貸';
+      items.push(`🏦 <strong>槓桿投資與負債結構分析</strong>：本次模擬啟用槓桿借貸，初始總投資市值放大至 <strong>${curr} ${formatCurrencyShort(initAssets)}</strong>（槓桿倍數 <strong>${levRatio}x</strong>，總借款 ${curr} ${formatCurrencyShort(results.debtSummary.totalBorrowing)}）。每年固定還款/利息支出約 <strong>${curr} ${formatCurrencyShort(results.debtSummary.totalAnnualService)}</strong>（每月約 ${curr} ${results.debtSummary.totalMonthlyService.toLocaleString()} 元）。`);
+
+      const hasPledge = state.debtPlans.some(p => p.type === 'stock_pledge' && (parseFloat(p.amount) || 0) > 0);
+      if (hasPledge) {
+        const initCov = results.yearlyTable[0]?.coverageRatio;
+        items.push(`🛡️ <strong>股票質押維持率監控</strong>：第 1 年初始維持率約為 <strong>${initCov ?? '--'}%</strong>（台灣券商追繳紅線為 <strong>130%</strong>，安全緩衝線為 166%）。長期若資產穩健成長維持率會持續拉高；但若遭遇 10% 悲觀極端股災，請務必備妥流動資金以因應補繳保證金風險。`);
+      }
+    }
+
     if (results.successRate >= 95) {
       items.push(`🎉 <strong>資產計畫極佳</strong>：投資組合存活率高達 <strong>${results.successRate}%</strong>，在歷史與隨機模擬中展現優異抗風險能力。`);
     } else if (results.successRate >= 80) {
@@ -2109,9 +2546,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (initialInv > 0) {
       const multiple = (stats.p50 / initialInv).toFixed(1);
-      items.push(`📈 <strong>長期累積效應</strong>：在 ${years} 年後，中位數實質資產達到 <strong>${curr} ${formatCurrencyShort(stats.p50)}</strong>，實質購買力約為初始本金的 <strong>${multiple} 倍</strong>。`);
+      items.push(`📈 <strong>長期累積效應</strong>：在 ${years} 年後，中位數實質淨資產達到 <strong>${curr} ${formatCurrencyShort(stats.p50)}</strong>，實質購買力約為初始自有本金的 <strong>${multiple} 倍</strong>。`);
     } else {
-      items.push(`📈 <strong>長期定期定額效應</strong>：在 ${years} 年後，零初始本金全靠現金流排程累積的中位數實質資產達到 <strong>${curr} ${formatCurrencyShort(stats.p50)}</strong>。`);
+      items.push(`📈 <strong>長期定期定額效應</strong>：在 ${years} 年後，零初始本金全靠現金流排程累積的中位數實質淨資產達到 <strong>${curr} ${formatCurrencyShort(stats.p50)}</strong>。`);
     }
 
     const infRate = (parseFloat(dom.inputInflationRate.value) || 2.0);

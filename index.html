@@ -594,9 +594,87 @@
             </div>
           </div>
 
+        <!-- 4. 槓桿與借貸投資策略 (Leverage & Debt Simulation) -->
+        <div class="glass-card rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200 space-y-4 dark:border-slate-700">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-2.5 dark:border-slate-700/60">
+            <h2 class="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2 dark:text-slate-100">
+              <i data-lucide="scale" class="w-4 h-4 text-amber-600"></i>
+              槓桿與借貸投資策略 (Leverage & Debt)
+            </h2>
+            
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="check-enable-debt" class="sr-only peer">
+              <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-600 dark:bg-slate-700"></div>
+              <span class="ml-2 text-xs font-bold text-slate-700 dark:text-slate-300" id="label-enable-debt">未啟用</span>
+            </label>
+          </div>
+
+          <!-- 借貸內容區塊 (未啟用時收合) -->
+          <div id="debt-config-container" class="space-y-3.5 hidden">
+            
+            <!-- 經典借貸槓桿一鍵範本 -->
+            <div class="space-y-1.5">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-slate-600 dark:text-slate-400">快速套用經典槓桿範本：</span>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-1.5">
+                <button type="button" class="btn-quick-debt-preset py-2 px-2 text-xs bg-amber-50 hover:bg-amber-100 text-amber-900 rounded-xl font-bold border border-amber-200 transition text-left shadow-2xs dark:bg-amber-950/30 dark:hover:bg-amber-900/40 dark:text-amber-200 dark:border-amber-800/50" data-preset="loan_7y_200w">
+                  🏦 7年信貸200萬<br><span class="text-[10px] font-normal text-amber-700 dark:text-amber-400">2.2% 本息均攤</span>
+                </button>
+                <button type="button" class="btn-quick-debt-preset py-2 px-2 text-xs bg-amber-50 hover:bg-amber-100 text-amber-900 rounded-xl font-bold border border-amber-200 transition text-left shadow-2xs dark:bg-amber-950/30 dark:hover:bg-amber-900/40 dark:text-amber-200 dark:border-amber-800/50" data-preset="pledge_150w_roll">
+                  📈 股票質押150萬<br><span class="text-[10px] font-normal text-amber-700 dark:text-amber-400">2.8% 只繳息展延</span>
+                </button>
+                <button type="button" class="btn-quick-debt-preset py-2 px-2 text-xs bg-amber-50 hover:bg-amber-100 text-amber-900 rounded-xl font-bold border border-amber-200 transition text-left shadow-2xs dark:bg-amber-950/30 dark:hover:bg-amber-900/40 dark:text-amber-200 dark:border-amber-800/50" data-preset="futures_margin_100w">
+                  ⚡ 期貨保證金槓桿<br><span class="text-[10px] font-normal text-amber-700 dark:text-amber-400">100萬 2.0% 轉倉成本</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- 借貸項目動態清單 -->
+            <div id="debt-plans-list" class="space-y-3">
+              <!-- JS 動態注入各筆借貸卡片 -->
+            </div>
+
+            <!-- 新增借貸按鈕組 -->
+            <div class="grid grid-cols-3 gap-2 pt-1 border-t border-slate-100 dark:border-slate-700/60">
+              <button type="button" id="btn-add-debt-personal" class="py-2 px-1.5 bg-slate-100 hover:bg-amber-50 hover:text-amber-800 text-slate-700 rounded-xl text-xs font-bold flex items-center justify-center gap-1 border border-slate-200 transition dark:bg-slate-800 dark:hover:bg-amber-950/30 dark:text-slate-300 dark:hover:text-amber-300 dark:border-slate-700">
+                <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                + 信貸 (本息攤)
+              </button>
+              <button type="button" id="btn-add-debt-pledge" class="py-2 px-1.5 bg-slate-100 hover:bg-amber-50 hover:text-amber-800 text-slate-700 rounded-xl text-xs font-bold flex items-center justify-center gap-1 border border-slate-200 transition dark:bg-slate-800 dark:hover:bg-amber-950/30 dark:text-slate-300 dark:hover:text-amber-300 dark:border-slate-700">
+                <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                + 質押 (只繳息)
+              </button>
+              <button type="button" id="btn-add-debt-futures" class="py-2 px-1.5 bg-slate-100 hover:bg-amber-50 hover:text-amber-800 text-slate-700 rounded-xl text-xs font-bold flex items-center justify-center gap-1 border border-slate-200 transition dark:bg-slate-800 dark:hover:bg-amber-950/30 dark:text-slate-300 dark:hover:text-amber-300 dark:border-slate-700">
+                <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                + 期貨 (資金成本)
+              </button>
+            </div>
+
+            <!-- 即時借貸總覽摘要小卡 -->
+            <div id="debt-summary-box" class="p-3.5 bg-amber-50/80 rounded-2xl border border-amber-200 text-xs space-y-2 dark:bg-amber-950/25 dark:border-amber-800/50">
+              <div class="flex items-center justify-between font-bold text-amber-950 border-b border-amber-200/80 pb-1.5 dark:text-amber-200 dark:border-amber-800/50">
+                <span class="flex items-center gap-1.5">
+                  <i data-lucide="calculator" class="w-4 h-4 text-amber-600"></i>
+                  <span>負債與還款試算總結：</span>
+                </span>
+                <span id="debt-summary-leverage-ratio" class="font-extrabold text-amber-800 bg-white px-2 py-0.5 rounded-lg border border-amber-200 dark:bg-slate-800 dark:text-amber-300 dark:border-amber-800/50">槓桿倍數 1.0x</span>
+              </div>
+              <div class="grid grid-cols-2 gap-2 text-slate-700 dark:text-slate-300">
+                <div>總借入槓桿本金：<strong id="debt-summary-total-loan" class="text-amber-700 font-extrabold dark:text-amber-400">NT$ 0 萬</strong></div>
+                <div>初始可投資總市值：<strong id="debt-summary-initial-assets" class="text-indigo-700 font-extrabold dark:text-indigo-400">NT$ 0 萬</strong></div>
+                <div>每月總還款/利息：<strong id="debt-summary-monthly-pay" class="text-rose-700 font-extrabold dark:text-rose-400">NT$ 0 元/月</strong></div>
+                <div>預估累計總利息：<strong id="debt-summary-total-interest" class="text-slate-900 font-extrabold dark:text-slate-100">NT$ 0 萬</strong></div>
+              </div>
+              <div class="text-[11px] text-amber-900/80 pt-1 border-t border-amber-200/60 leading-relaxed dark:text-amber-300/80 dark:border-amber-800/40">
+                ⚠️ <strong>槓桿風險提示</strong>：股票質押請注意維持率（低於 130% 觸發追繳/斷頭）。信貸需評估每月現金流負擔。
+              </div>
+            </div>
+
+          </div>
         </div>
 
-        <!-- 4. 資產配置與權重設定 -->
+        <!-- 5. 資產配置與權重設定 -->
         <div class="glass-card rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200 space-y-4 dark:border-slate-700">
           <div class="flex items-center justify-between border-b border-slate-100 pb-2.5 dark:border-slate-700/60">
             <h2 class="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2 dark:text-slate-100">
