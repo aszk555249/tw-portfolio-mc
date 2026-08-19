@@ -47,12 +47,22 @@
 
 ---
 
-## 📐 演算法架構
+## 📐 演算法與金融模型架構
 
-1. **參數化相關性模型 (Parametric Cholesky Decomposition)**:
-   - 根據資產年化報酬率 $\mu$、波動度 $\sigma$ 與相關係數矩陣 $\mathbf{C}$ 建立協方差矩陣 $\boldsymbol{\Sigma}$。
-   - 透過 Cholesky 分解 $\boldsymbol{\Sigma} = \mathbf{L} \mathbf{L}^T$ 生成多維相關隨機變數，精確模擬跨資產聯動效應。
-2. **歷史重抽樣模型 (Historical Bootstrap)**:
-   - 隨機自 2000-2025 年台灣與美國歷史年度總報酬資料庫中抽樣，完整捕捉金融海嘯、科技泡沫與通膨升息等極端肥尾風險。
-3. **實質購買力折現公式**:
-   $$\text{Real Wealth}_t = \frac{\text{Nominal Wealth}_t}{\prod_{k=1}^t (1 + \text{Inflation}_k)}$$
+1. **幾何布朗運動與多資產相關性模型 (Parametric Cholesky Decomposition)**：
+   - 依據各資產歷史年化報酬率 $\mu$、波動度 $\sigma$ 與資產間相關係數矩陣 $\mathbf{C}$ 建立協方差矩陣 $\boldsymbol{\Sigma}$。
+   - 透過 Cholesky 下三角分解 $\boldsymbol{\Sigma} = \mathbf{L}\mathbf{L}^T$ 生成多維度相關常態隨機變數 $Z_{\text{corr}} = \mathbf{L}Z$：
+
+   $$\text{Return}_i = \exp\left[\left(\mu_i - \frac{1}{2}\sigma_i^2\right) + \sigma_i Z_{\text{corr}, i}\right] - 1$$
+
+2. **歷史真實重抽樣模型 (Historical Bootstrap)**：
+   - 隨機自 2000 ~ 2025 年台美市場歷史年度總報酬與台灣 CPI 通膨資料庫進行跨資產同步抽樣，完整保留股債連動性，並捕捉科技泡沫、金融海嘯與通膨升息之極端肥尾風險。
+
+3. **實質購買力通膨折現模型 (Fisher Inflation Adjustment)**：
+   - 累積通膨係數：
+
+   $$\text{CumInflation}_t = \prod_{k=1}^{t} (1 + \text{Inflation}_k)$$
+
+   - 實質購買力資產終值：
+
+   $$\text{Real Wealth}_t = \frac{\text{Nominal Wealth}_t}{\text{CumInflation}_t}$$
