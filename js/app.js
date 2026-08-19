@@ -61,6 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 2. DOM 元素快取
   const dom = {
+    btnThemeToggle: document.getElementById('btn-theme-toggle'),
     btnCurrTwd: document.getElementById('btn-curr-twd'),
     btnCurrUsd: document.getElementById('btn-curr-usd'),
     toggleReal: document.getElementById('toggle-real'),
@@ -79,7 +80,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initialAmountDisplay: document.getElementById('initial-amount-display'),
     inputYears: document.getElementById('input-years'),
     inputYearsNumber: document.getElementById('input-years-number'),
-    yearsDisplay: document.getElementById('years-display'),
     selectTrials: document.getElementById('select-trials'),
     selectModel: document.getElementById('select-model'),
     modelExplanationBox: document.getElementById('model-explanation-box'),
@@ -256,7 +256,39 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // ================= 深色模式 =================
+
+  function isDarkMode() {
+    return document.documentElement.classList.contains('dark');
+  }
+
+  function getChartTheme() {
+    return isDarkMode()
+      ? { grid: 'rgba(100, 116, 139, 0.25)', tick: '#cbd5e1', legend: '#e2e8f0' }
+      : { grid: 'rgba(226, 232, 240, 0.6)', tick: '#475569', legend: '#334155' };
+  }
+
+  function toggleTheme() {
+    const isDark = document.documentElement.classList.toggle('dark');
+    try {
+      localStorage.setItem('tw_mc_theme', isDark ? 'dark' : 'light');
+    } catch (e) {}
+
+    // 重新渲染已存在的圖表以套用新主題配色 (不需要重新跑模擬)
+    if (state.lastResults) {
+      renderTrajectoryChart(state.lastResults);
+      renderSurvivalChart(state.lastResults);
+      renderHistogramChart(state.lastResults);
+    }
+    renderPortfolioModel();
+  }
+
   function bindEvents() {
+    // 深色 / 淺色主題切換
+    if (dom.btnThemeToggle) {
+      dom.btnThemeToggle.addEventListener('click', toggleTheme);
+    }
+
     // 幣別切換
     dom.btnCurrTwd.addEventListener('click', () => setCurrency('TWD'));
     dom.btnCurrUsd.addEventListener('click', () => setCurrency('USD'));
@@ -465,7 +497,7 @@ document.addEventListener('DOMContentLoaded', () => {
         setWithdrawalBasis('rate');
         updateWithdrawalRateDesc();
         document.querySelectorAll('.btn-quick-withdraw-rate').forEach(b => {
-          b.className = 'btn-quick-withdraw-rate px-2.5 py-1 text-xs bg-white hover:bg-purple-100 text-purple-800 border border-purple-200 rounded-lg font-bold transition';
+          b.className = 'btn-quick-withdraw-rate px-2.5 py-1 text-xs bg-white hover:bg-purple-100 text-purple-800 border border-purple-200 rounded-lg font-bold transition dark:bg-slate-800 dark:hover:bg-purple-900/40 dark:text-purple-300 dark:border-purple-800/50';
         });
         btn.className = 'btn-quick-withdraw-rate px-2.5 py-1 text-xs bg-purple-600 text-white rounded-lg font-bold transition';
         runMonteCarlo();
@@ -495,7 +527,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (dom.selectWithdrawalAmountFreq) dom.selectWithdrawalAmountFreq.value = freq;
         setWithdrawalBasis('amount');
         document.querySelectorAll('.btn-quick-withdraw-amount').forEach(b => {
-          b.className = 'btn-quick-withdraw-amount px-2.5 py-1 text-xs bg-white hover:bg-purple-100 text-purple-800 border border-purple-200 rounded-lg font-bold transition';
+          b.className = 'btn-quick-withdraw-amount px-2.5 py-1 text-xs bg-white hover:bg-purple-100 text-purple-800 border border-purple-200 rounded-lg font-bold transition dark:bg-slate-800 dark:hover:bg-purple-900/40 dark:text-purple-300 dark:border-purple-800/50';
         });
         btn.className = 'btn-quick-withdraw-amount px-2.5 py-1 text-xs bg-purple-600 text-white rounded-lg font-bold transition';
         runMonteCarlo();
@@ -627,19 +659,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function setCurrency(curr) {
     state.currency = curr;
+    const activeCls = ['bg-white', 'text-blue-600', 'shadow-xs', 'dark:bg-slate-600', 'dark:text-blue-300'];
+    const inactiveCls = ['text-slate-600', 'dark:text-slate-400'];
     if (curr === 'TWD') {
-      dom.btnCurrTwd.classList.add('bg-white', 'text-blue-600', 'shadow-xs');
-      dom.btnCurrTwd.classList.remove('text-slate-600');
-      dom.btnCurrUsd.classList.remove('bg-white', 'text-blue-600', 'shadow-xs');
-      dom.btnCurrUsd.classList.add('text-slate-600');
+      dom.btnCurrTwd.classList.add(...activeCls);
+      dom.btnCurrTwd.classList.remove(...inactiveCls);
+      dom.btnCurrUsd.classList.remove(...activeCls);
+      dom.btnCurrUsd.classList.add(...inactiveCls);
       document.getElementById('curr-prefix-1').textContent = 'NT$';
       document.getElementById('curr-prefix-2').textContent = 'NT$';
       document.getElementById('curr-prefix-3').textContent = 'NT$';
     } else {
-      dom.btnCurrUsd.classList.add('bg-white', 'text-blue-600', 'shadow-xs');
-      dom.btnCurrUsd.classList.remove('text-slate-600');
-      dom.btnCurrTwd.classList.remove('bg-white', 'text-blue-600', 'shadow-xs');
-      dom.btnCurrTwd.classList.add('text-slate-600');
+      dom.btnCurrUsd.classList.add(...activeCls);
+      dom.btnCurrUsd.classList.remove(...inactiveCls);
+      dom.btnCurrTwd.classList.remove(...activeCls);
+      dom.btnCurrTwd.classList.add(...inactiveCls);
       document.getElementById('curr-prefix-1').textContent = 'USD $';
       document.getElementById('curr-prefix-2').textContent = 'USD $';
       document.getElementById('curr-prefix-3').textContent = 'USD $';
@@ -672,13 +706,13 @@ document.addEventListener('DOMContentLoaded', () => {
   function setCashflowPlannerMode(mode) {
     state.cashflowPlannerMode = mode;
     if (mode === 'simple') {
-      dom.btnModeSimple.className = 'px-3 py-1.5 rounded-lg bg-white text-blue-600 shadow-xs font-bold';
-      dom.btnModeAdvanced.className = 'px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-800';
+      dom.btnModeSimple.className = 'px-3 py-1.5 rounded-lg bg-white text-blue-600 shadow-xs font-bold dark:bg-slate-600 dark:text-blue-300 dark:bg-slate-800';
+      dom.btnModeAdvanced.className = 'px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200';
       dom.simpleCashflowContainer.classList.remove('hidden');
       dom.advancedCashflowContainer.classList.add('hidden');
     } else {
-      dom.btnModeAdvanced.className = 'px-3 py-1.5 rounded-lg bg-white text-blue-600 shadow-xs font-bold';
-      dom.btnModeSimple.className = 'px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-800';
+      dom.btnModeAdvanced.className = 'px-3 py-1.5 rounded-lg bg-white text-blue-600 shadow-xs font-bold dark:bg-slate-600 dark:text-blue-300 dark:bg-slate-800';
+      dom.btnModeSimple.className = 'px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200';
       dom.advancedCashflowContainer.classList.remove('hidden');
       dom.simpleCashflowContainer.classList.add('hidden');
     }
@@ -687,13 +721,13 @@ document.addEventListener('DOMContentLoaded', () => {
   function setWithdrawalBasis(basis) {
     state.withdrawalBasis = basis;
     if (basis === 'rate') {
-      if (dom.btnWithdrawBasisRate) dom.btnWithdrawBasisRate.className = 'py-1.5 px-2 rounded-lg bg-white text-purple-700 shadow-xs font-extrabold transition';
-      if (dom.btnWithdrawBasisAmount) dom.btnWithdrawBasisAmount.className = 'py-1.5 px-2 rounded-lg text-slate-600 hover:text-slate-900 transition';
+      if (dom.btnWithdrawBasisRate) dom.btnWithdrawBasisRate.className = 'py-1.5 px-2 rounded-lg bg-white text-purple-700 shadow-xs font-extrabold transition dark:bg-slate-600 dark:text-purple-300 dark:bg-slate-800 dark:text-purple-400';
+      if (dom.btnWithdrawBasisAmount) dom.btnWithdrawBasisAmount.className = 'py-1.5 px-2 rounded-lg text-slate-600 hover:text-slate-900 transition dark:text-slate-400 dark:hover:text-slate-100';
       if (dom.boxWithdrawRate) dom.boxWithdrawRate.classList.remove('hidden');
       if (dom.boxWithdrawAmount) dom.boxWithdrawAmount.classList.add('hidden');
     } else {
-      if (dom.btnWithdrawBasisAmount) dom.btnWithdrawBasisAmount.className = 'py-1.5 px-2 rounded-lg bg-white text-purple-700 shadow-xs font-extrabold transition';
-      if (dom.btnWithdrawBasisRate) dom.btnWithdrawBasisRate.className = 'py-1.5 px-2 rounded-lg text-slate-600 hover:text-slate-900 transition';
+      if (dom.btnWithdrawBasisAmount) dom.btnWithdrawBasisAmount.className = 'py-1.5 px-2 rounded-lg bg-white text-purple-700 shadow-xs font-extrabold transition dark:bg-slate-600 dark:text-purple-300 dark:bg-slate-800 dark:text-purple-400';
+      if (dom.btnWithdrawBasisRate) dom.btnWithdrawBasisRate.className = 'py-1.5 px-2 rounded-lg text-slate-600 hover:text-slate-900 transition dark:text-slate-400 dark:hover:text-slate-100';
       if (dom.boxWithdrawAmount) dom.boxWithdrawAmount.classList.remove('hidden');
       if (dom.boxWithdrawRate) dom.boxWithdrawRate.classList.add('hidden');
       updateWithdrawalAmountDisplay();
@@ -759,7 +793,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (bVal === year || (bVal === 999 && (year === 999 || year > totalYears))) {
         btn.className = 'btn-quick-retire px-2 py-1 text-xs bg-indigo-600 text-white rounded-lg font-black transition border border-indigo-700 shadow-2xs';
       } else {
-        btn.className = 'btn-quick-retire px-2 py-1 text-xs bg-white hover:bg-indigo-100 text-indigo-800 rounded-lg font-bold border border-indigo-200 transition';
+        btn.className = 'btn-quick-retire px-2 py-1 text-xs bg-white hover:bg-indigo-100 text-indigo-800 rounded-lg font-bold border border-indigo-200 transition dark:bg-slate-800 dark:hover:bg-indigo-900/40 dark:text-indigo-300 dark:border-indigo-800/50';
       }
     });
 
@@ -773,18 +807,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (updateInput && dom.inputYearsNumber) {
       dom.inputYearsNumber.value = years;
     }
-    if (dom.yearsDisplay) {
-      dom.yearsDisplay.textContent = `${years} 年`;
-    }
     if (dom.infYearsText) {
       dom.infYearsText.textContent = years;
     }
 
     document.querySelectorAll('.btn-quick-years').forEach(btn => {
       if (parseInt(btn.dataset.val) === years) {
-        btn.className = 'btn-quick-years px-2.5 py-1 text-xs bg-blue-100 text-blue-800 rounded-lg font-black transition border border-blue-200 shadow-2xs';
+        btn.className = 'btn-quick-years px-2.5 py-1 text-xs bg-blue-100 text-blue-800 rounded-lg font-black transition border border-blue-200 shadow-2xs dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-800/50';
       } else {
-        btn.className = 'btn-quick-years px-2.5 py-1 text-xs bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 rounded-lg font-bold transition';
+        btn.className = 'btn-quick-years px-2.5 py-1 text-xs bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 rounded-lg font-bold transition dark:bg-slate-800 dark:hover:bg-blue-900/30 dark:text-slate-300 dark:hover:text-blue-400';
       }
     });
 
@@ -836,18 +867,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!isBootstrap) {
       const fixedRate = parseFloat(dom.inputInflationRate.value) || 2.0;
-      dom.inflationExplanationBox.className = 'p-2.5 rounded-xl border bg-slate-100/90 border-slate-200 text-xs text-slate-800 leading-relaxed';
+      dom.inflationExplanationBox.className = 'p-2.5 rounded-xl border bg-slate-100/90 border-slate-200 text-xs text-slate-800 leading-relaxed dark:bg-slate-800/80 dark:border-slate-700 dark:text-slate-200';
       dom.inflationExplanationBox.innerHTML = `
         <div>📘 <strong>【固定年通膨率】</strong>：每年固定依設定的 <strong>${fixedRate}%</strong> 計算物價膨脹與實質購買力折現。</div>
       `;
     } else {
-      dom.inflationExplanationBox.className = 'p-2.5 rounded-xl border bg-amber-50/90 border-amber-200 text-xs text-amber-950 leading-relaxed space-y-1.5';
+      dom.inflationExplanationBox.className = 'p-2.5 rounded-xl border bg-amber-50/90 border-amber-200 text-xs text-amber-950 leading-relaxed space-y-1.5 dark:bg-amber-950/30 dark:border-amber-800/50 dark:text-amber-200';
       dom.inflationExplanationBox.innerHTML = `
-        <div class="font-bold text-amber-900 flex items-center justify-between">
+        <div class="font-bold text-amber-900 flex items-center justify-between dark:text-amber-200">
           <span>🎲 <strong>【歷史真實 CPI 抽樣】</strong> 統計 (2000~2025 共 26 年)：</span>
-          <span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded-md font-black">歷史平均: ${avgCpi}%</span>
+          <span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded-md font-black dark:bg-amber-900/40 dark:text-amber-300">歷史平均: ${avgCpi}%</span>
         </div>
-        <div class="text-amber-800 leading-relaxed">
+        <div class="text-amber-800 leading-relaxed dark:text-amber-300">
           • <strong>計算方式</strong>：模擬中每一年隨機抽取台灣真實 26 年 CPI 之一（最低 <strong>${minCpi}%</strong>、最高 <strong>${maxCpi}%</strong>，平均 <strong>${avgCpi}%</strong>）。<br>
           • <strong>股債通膨聯動</strong>：若模擬模型選用「歷史真實抽樣」，通膨率會與當年度市場大盤<strong>同步聯動</strong>（例如抽到 2008 年股災時，通膨自動對齊 2008 年真實 CPI 3.5%）。
         </div>
@@ -859,23 +890,23 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!dom.modelExplanationBox) return;
     const model = dom.selectModel.value;
     if (model === 'parametric') {
-      dom.modelExplanationBox.className = 'p-3 rounded-xl border bg-blue-50/80 border-blue-200 text-xs text-blue-950 leading-relaxed';
+      dom.modelExplanationBox.className = 'p-3 rounded-xl border bg-blue-50/80 border-blue-200 text-xs text-blue-950 leading-relaxed dark:bg-blue-950/30 dark:border-blue-800/50 dark:text-blue-200';
       dom.modelExplanationBox.innerHTML = `
         <div class="flex items-start gap-2">
           <span class="text-base shrink-0">📘</span>
           <div>
-            <div class="font-black text-blue-800 mb-0.5">【參數化常態 (Cholesky 分解)】白話解說：</div>
+            <div class="font-black text-blue-800 mb-0.5 dark:text-blue-300">【參數化常態 (Cholesky 分解)】白話解說：</div>
             由電腦依據各資產的<strong>「預期平均報酬率」</strong>與<strong>「波動風險 (標準差)」</strong>，並考慮<strong>股債彼此連動性</strong>，以數學常態分佈公式隨機推演未來數千種平滑的市場情境，適合評估長期理論上的機率分佈。
           </div>
         </div>
       `;
     } else {
-      dom.modelExplanationBox.className = 'p-3 rounded-xl border bg-amber-50/90 border-amber-200 text-xs text-amber-950 leading-relaxed';
+      dom.modelExplanationBox.className = 'p-3 rounded-xl border bg-amber-50/90 border-amber-200 text-xs text-amber-950 leading-relaxed dark:bg-amber-950/30 dark:border-amber-800/50 dark:text-amber-200';
       dom.modelExplanationBox.innerHTML = `
         <div class="flex items-start gap-2">
           <span class="text-base shrink-0">🎲</span>
           <div>
-            <div class="font-black text-amber-800 mb-0.5">【歷史真實抽樣 (Bootstrap)】白話解說：</div>
+            <div class="font-black text-amber-800 mb-0.5 dark:text-amber-300">【歷史真實抽樣 (Bootstrap)】白話解說：</div>
             就像<strong>「摸彩箱抽球」</strong>！電腦直接從 2000~2025 年台灣與全球市場<strong>真實發生過的 26 年數據</strong>（包含科技泡沫、金融海嘯、QE大牛市）隨機抽籤組合，<strong>完整保留真實歷史中黑天鵝股災與通膨的極端衝擊</strong>！
           </div>
         </div>
@@ -908,13 +939,13 @@ document.addEventListener('DOMContentLoaded', () => {
       seqText = '🚨 <strong>【報酬順序：初期逆風壓力測試】</strong>：模擬<strong>「剛退休前 2 年就遭遇像 2008 金融海嘯或 2000 科技崩盤般的世紀股災」</strong>！在暴跌時持續提領生活費，本金將承受巨大傷害，最能檢驗提領策略的抗災極限！';
     }
 
-    dom.feeSequenceExplanationBox.className = seq === 'stress_early' 
-      ? 'p-3 rounded-xl border bg-rose-50/90 border-rose-200 text-xs text-rose-950 leading-relaxed space-y-1.5'
-      : 'p-3 rounded-xl border bg-slate-100/90 border-slate-200 text-xs text-slate-800 leading-relaxed space-y-1.5';
+    dom.feeSequenceExplanationBox.className = seq === 'stress_early'
+      ? 'p-3 rounded-xl border bg-rose-50/90 border-rose-200 text-xs text-rose-950 leading-relaxed space-y-1.5 dark:bg-rose-950/30 dark:border-rose-800/50 dark:text-rose-200'
+      : 'p-3 rounded-xl border bg-slate-100/90 border-slate-200 text-xs text-slate-800 leading-relaxed space-y-1.5 dark:bg-slate-800/80 dark:border-slate-700 dark:text-slate-200';
 
     dom.feeSequenceExplanationBox.innerHTML = `
       <div>${feeText}</div>
-      <div class="pt-1.5 border-t border-slate-200/60">${seqText}</div>
+      <div class="pt-1.5 border-t border-slate-200/60 dark:border-slate-700/60">${seqText}</div>
     `;
   }
 
@@ -922,20 +953,20 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!dom.samplePathsExplanationBox) return;
     const isShown = dom.checkShowPaths.checked;
     if (isShown) {
-      dom.samplePathsExplanationBox.className = 'p-2.5 rounded-xl border bg-indigo-50/80 border-indigo-200 text-xs text-indigo-950 leading-relaxed flex items-start gap-2 transition-all';
+      dom.samplePathsExplanationBox.className = 'p-2.5 rounded-xl border bg-indigo-50/80 border-indigo-200 text-xs text-indigo-950 leading-relaxed flex items-start gap-2 transition-all dark:bg-indigo-950/30 dark:border-indigo-800/50 dark:text-indigo-200';
       dom.samplePathsExplanationBox.innerHTML = `
         <span class="text-base shrink-0">🎲</span>
         <div>
-          <div class="font-black text-indigo-900 mb-0.5">【抽樣路徑（30 條）已開啟】白話解說：</div>
+          <div class="font-black text-indigo-900 mb-0.5 dark:text-indigo-200">【抽樣路徑（30 條）已開啟】白話解說：</div>
           畫面上 <strong>30 條彩色細線</strong> 代表隨機抽出的 30 位投資人真實經歷的人生走勢，完整呈現市場每年大漲大跌的真實起伏震盪感；底下的粗線與彩色區間則為統計上的<strong>機率百分位數 (10%~90%)</strong>。
         </div>
       `;
     } else {
-      dom.samplePathsExplanationBox.className = 'p-2.5 rounded-xl border bg-slate-100/90 border-slate-200 text-xs text-slate-800 leading-relaxed flex items-start gap-2 transition-all';
+      dom.samplePathsExplanationBox.className = 'p-2.5 rounded-xl border bg-slate-100/90 border-slate-200 text-xs text-slate-800 leading-relaxed flex items-start gap-2 transition-all dark:bg-slate-800/80 dark:border-slate-700 dark:text-slate-200';
       dom.samplePathsExplanationBox.innerHTML = `
         <span class="text-base shrink-0">📊</span>
         <div>
-          <div class="font-black text-slate-900 mb-0.5">【純統計機率區間模式】白話解說：</div>
+          <div class="font-black text-slate-900 mb-0.5 dark:text-slate-100">【純統計機率區間模式】白話解說：</div>
           已隱藏個別隨機波動路徑，圖表僅保留平滑的 <strong>10th（悲觀）、25th、50th（中位數）、75th、90th（樂觀）</strong> 百分位數機率區間帶，方便一目了然觀察整體長期資產落點。
         </div>
       `;
@@ -998,7 +1029,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (dom.withdrawRateMonthlyDisplay) {
       dom.withdrawRateMonthlyDisplay.innerHTML = `
         <span>相當於每月生活費：</span>
-        <span class="font-black text-purple-950">每月約 ${curr} ${formatCurrencyShort(monthlyAmt)} (${monthlyAmt.toLocaleString()} 元)</span>
+        <span class="font-black text-purple-950 dark:text-purple-200">每月約 ${curr} ${formatCurrencyShort(monthlyAmt)} (${monthlyAmt.toLocaleString()} 元)</span>
       `;
     }
     if (dom.withdrawRateTimingNote) {
@@ -1103,10 +1134,10 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    dom.withdrawalStrategyExplanationBox.className = 'p-2.5 rounded-xl border bg-purple-50/90 border-purple-200 text-xs text-purple-950 leading-relaxed';
+    dom.withdrawalStrategyExplanationBox.className = 'p-2.5 rounded-xl border bg-purple-50/90 border-purple-200 text-xs text-purple-950 leading-relaxed dark:bg-purple-950/30 dark:border-purple-800/50 dark:text-purple-200';
     dom.withdrawalStrategyExplanationBox.innerHTML = `
-      <div class="font-bold text-purple-900 mb-0.5">${title}</div>
-      <div class="text-purple-800">${body}</div>
+      <div class="font-bold text-purple-900 mb-0.5 dark:text-purple-200">${title}</div>
+      <div class="text-purple-800 dark:text-purple-300">${body}</div>
     `;
   }
 
@@ -1130,13 +1161,13 @@ document.addEventListener('DOMContentLoaded', () => {
       colors.push(meta.color || '#3b82f6');
 
       const tr = document.createElement('tr');
-      tr.className = 'hover:bg-slate-50 transition';
+      tr.className = 'hover:bg-slate-50 transition dark:hover:bg-slate-700/50';
       tr.innerHTML = `
-        <td class="py-2.5 px-3 flex items-center gap-2 text-slate-800 font-bold">
+        <td class="py-2.5 px-3 flex items-center gap-2 text-slate-800 font-bold dark:text-slate-200">
           <span class="w-3 h-3 rounded-full shrink-0" style="background-color: ${meta.color || '#3b82f6'}"></span>
           <span>${meta.name}</span>
         </td>
-        <td class="py-2.5 px-3 text-right font-black text-slate-900">${normalizedPct.toFixed(2)}%</td>
+        <td class="py-2.5 px-3 text-right font-black text-slate-900 dark:text-slate-100">${normalizedPct.toFixed(2)}%</td>
       `;
       dom.portfolioModelTableBody.appendChild(tr);
     });
@@ -1158,7 +1189,7 @@ document.addEventListener('DOMContentLoaded', () => {
           data,
           backgroundColor: colors,
           borderWidth: 2,
-          borderColor: '#ffffff',
+          borderColor: isDarkMode() ? '#1e293b' : '#ffffff',
           hoverOffset: 6
         }]
       },
@@ -1193,7 +1224,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (state.cashflowStages.length === 0) {
       dom.cashflowStagesList.innerHTML = `
-        <div class="p-4 text-center text-sm text-slate-400 border border-dashed border-slate-200 rounded-2xl">
+        <div class="p-4 text-center text-sm text-slate-400 border border-dashed border-slate-200 rounded-2xl dark:text-slate-500 dark:border-slate-700">
           目前無任何額外現金流排程（僅依初始本金自然成長）
         </div>
       `;
@@ -1202,100 +1233,115 @@ document.addEventListener('DOMContentLoaded', () => {
 
     state.cashflowStages.forEach((stage, idx) => {
       const card = document.createElement('div');
-      card.className = 'p-4 bg-white rounded-2xl border border-slate-200 shadow-2xs space-y-3';
+      card.className = 'p-4 bg-white rounded-2xl border border-slate-200 shadow-2xs space-y-3 dark:bg-slate-800 dark:border-slate-700';
 
       if (stage.type === 'periodic_contribution') {
         card.innerHTML = `
-          <div class="flex items-center justify-between border-b border-slate-100 pb-2">
-            <span class="text-sm font-black text-emerald-700 flex items-center gap-1.5">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-2 dark:border-slate-700/60">
+            <span class="text-sm font-black text-emerald-700 flex items-center gap-1.5 dark:text-emerald-400">
               <i data-lucide="calendar" class="w-4 h-4"></i>
               定期定額階段 ${idx + 1}
             </span>
-            <button type="button" class="btn-remove-stage text-slate-400 hover:text-rose-600 p-1 rounded-lg hover:bg-rose-50 transition" data-idx="${idx}">
+            <button type="button" class="btn-remove-stage text-slate-400 hover:text-rose-600 p-1 rounded-lg hover:bg-rose-50 transition dark:text-slate-500 dark:hover:bg-rose-900/30 dark:hover:text-rose-400" data-idx="${idx}">
               <i data-lucide="x" class="w-4 h-4"></i>
             </button>
           </div>
           <div class="grid grid-cols-12 gap-3 text-xs sm:text-sm">
             <div class="col-span-5">
-              <label class="text-slate-600 font-bold block mb-1">年期區間 (第X年~第Y年)</label>
+              <label class="text-slate-600 font-bold block mb-1 dark:text-slate-400">年期區間 (第X年~第Y年)</label>
               <div class="flex items-center gap-1.5">
-                <input type="number" min="1" max="${totalYears}" value="${stage.startYear}" class="stage-field w-14 p-1.5 border border-slate-300 rounded-lg text-center font-bold text-slate-900" data-idx="${idx}" data-prop="startYear">
+                <input type="number" min="1" max="${totalYears}" value="${stage.startYear}" class="stage-field w-14 p-1.5 border border-slate-300 rounded-lg text-center font-bold text-slate-900 dark:border-slate-600 dark:text-slate-100" data-idx="${idx}" data-prop="startYear">
                 <span class="font-bold">~</span>
-                <input type="number" min="1" max="${totalYears}" value="${stage.endYear}" class="stage-field w-14 p-1.5 border border-slate-300 rounded-lg text-center font-bold text-slate-900" data-idx="${idx}" data-prop="endYear">
+                <input type="number" min="1" max="${totalYears}" value="${stage.endYear}" class="stage-field w-14 p-1.5 border border-slate-300 rounded-lg text-center font-bold text-slate-900 dark:border-slate-600 dark:text-slate-100" data-idx="${idx}" data-prop="endYear">
                 <span class="font-bold">年</span>
               </div>
             </div>
             <div class="col-span-4">
-              <label class="text-slate-600 font-bold block mb-1">投入金額 (${currSymbol})</label>
-              <input type="number" step="1000" min="0" value="${stage.amount}" class="stage-field w-full p-1.5 border border-slate-300 rounded-lg font-bold text-slate-900" data-idx="${idx}" data-prop="amount">
+              <label class="text-slate-600 font-bold block mb-1 dark:text-slate-400">投入金額 (${currSymbol})</label>
+              <input type="number" step="1000" min="0" value="${stage.amount}" class="stage-field w-full p-1.5 border border-slate-300 rounded-lg font-bold text-slate-900 dark:border-slate-600 dark:text-slate-100" data-idx="${idx}" data-prop="amount">
             </div>
             <div class="col-span-3">
-              <label class="text-slate-600 font-bold block mb-1">頻率</label>
-              <select class="stage-field w-full p-1.5 border border-slate-300 rounded-lg font-bold text-slate-900" data-idx="${idx}" data-prop="frequency">
+              <label class="text-slate-600 font-bold block mb-1 dark:text-slate-400">頻率</label>
+              <select class="stage-field w-full p-1.5 border border-slate-300 rounded-lg font-bold text-slate-900 dark:border-slate-600 dark:text-slate-100" data-idx="${idx}" data-prop="frequency">
                 <option value="monthly" ${stage.frequency === 'monthly' ? 'selected' : ''}>每月</option>
                 <option value="annual" ${stage.frequency === 'annual' ? 'selected' : ''}>每年</option>
               </select>
+            </div>
+            <div class="col-span-12 sm:col-span-5">
+              <label class="text-slate-600 font-bold block mb-1 dark:text-slate-400">每年投入成長率 (%，模擬加薪/通膨調升)</label>
+              <input type="number" step="0.1" min="0" max="20" value="${((stage.growthRate ?? 0.02) * 100).toFixed(1)}" class="stage-field w-full p-1.5 border border-slate-300 rounded-lg font-bold text-slate-900 dark:border-slate-600 dark:text-slate-100" data-idx="${idx}" data-prop="growthRate">
             </div>
           </div>
         `;
       } else if (stage.type === 'lump_sum_in') {
         card.innerHTML = `
-          <div class="flex items-center justify-between border-b border-slate-100 pb-2">
-            <span class="text-sm font-black text-blue-700 flex items-center gap-1.5">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-2 dark:border-slate-700/60">
+            <span class="text-sm font-black text-blue-700 flex items-center gap-1.5 dark:text-blue-400">
               <i data-lucide="coins" class="w-4 h-4"></i>
               單筆投入/加碼
             </span>
-            <button type="button" class="btn-remove-stage text-slate-400 hover:text-rose-600 p-1 rounded-lg hover:bg-rose-50 transition" data-idx="${idx}">
+            <button type="button" class="btn-remove-stage text-slate-400 hover:text-rose-600 p-1 rounded-lg hover:bg-rose-50 transition dark:text-slate-500 dark:hover:bg-rose-900/30 dark:hover:text-rose-400" data-idx="${idx}">
               <i data-lucide="x" class="w-4 h-4"></i>
             </button>
           </div>
           <div class="grid grid-cols-12 gap-3 text-xs sm:text-sm">
             <div class="col-span-5">
-              <label class="text-slate-600 font-bold block mb-1">在第幾年單筆注入</label>
+              <label class="text-slate-600 font-bold block mb-1 dark:text-slate-400">在第幾年單筆注入</label>
               <div class="flex items-center gap-1.5">
                 <span class="font-bold">第</span>
-                <input type="number" min="1" max="${totalYears}" value="${stage.year}" class="stage-field w-16 p-1.5 border border-slate-300 rounded-lg text-center font-bold text-slate-900" data-idx="${idx}" data-prop="year">
+                <input type="number" min="1" max="${totalYears}" value="${stage.year}" class="stage-field w-16 p-1.5 border border-slate-300 rounded-lg text-center font-bold text-slate-900 dark:border-slate-600 dark:text-slate-100" data-idx="${idx}" data-prop="year">
                 <span class="font-bold">年</span>
               </div>
             </div>
             <div class="col-span-7">
-              <label class="text-slate-600 font-bold block mb-1">單筆注入金額 (${currSymbol})</label>
-              <input type="number" step="50000" min="0" value="${stage.amount}" class="stage-field w-full p-1.5 border border-slate-300 rounded-lg font-bold text-slate-900" data-idx="${idx}" data-prop="amount">
+              <label class="text-slate-600 font-bold block mb-1 dark:text-slate-400">單筆注入金額 (${currSymbol})</label>
+              <input type="number" step="50000" min="0" value="${stage.amount}" class="stage-field w-full p-1.5 border border-slate-300 rounded-lg font-bold text-slate-900 dark:border-slate-600 dark:text-slate-100" data-idx="${idx}" data-prop="amount">
             </div>
           </div>
         `;
       } else if (stage.type === 'periodic_withdrawal') {
         card.innerHTML = `
-          <div class="flex items-center justify-between border-b border-slate-100 pb-2">
-            <span class="text-sm font-black text-purple-700 flex items-center gap-1.5">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-2 dark:border-slate-700/60">
+            <span class="text-sm font-black text-purple-700 flex items-center gap-1.5 dark:text-purple-400">
               <i data-lucide="coffee" class="w-4 h-4"></i>
               退休提領階段 ${idx + 1}
             </span>
-            <button type="button" class="btn-remove-stage text-slate-400 hover:text-rose-600 p-1 rounded-lg hover:bg-rose-50 transition" data-idx="${idx}">
+            <button type="button" class="btn-remove-stage text-slate-400 hover:text-rose-600 p-1 rounded-lg hover:bg-rose-50 transition dark:text-slate-500 dark:hover:bg-rose-900/30 dark:hover:text-rose-400" data-idx="${idx}">
               <i data-lucide="x" class="w-4 h-4"></i>
             </button>
           </div>
           <div class="grid grid-cols-12 gap-3 text-xs sm:text-sm">
             <div class="col-span-5">
-              <label class="text-slate-600 font-bold block mb-1">提領年期區間</label>
+              <label class="text-slate-600 font-bold block mb-1 dark:text-slate-400">提領年期區間</label>
               <div class="flex items-center gap-1.5">
-                <input type="number" min="1" max="${totalYears}" value="${stage.startYear}" class="stage-field w-14 p-1.5 border border-slate-300 rounded-lg text-center font-bold text-slate-900" data-idx="${idx}" data-prop="startYear">
+                <input type="number" min="1" max="${totalYears}" value="${stage.startYear}" class="stage-field w-14 p-1.5 border border-slate-300 rounded-lg text-center font-bold text-slate-900 dark:border-slate-600 dark:text-slate-100" data-idx="${idx}" data-prop="startYear">
                 <span class="font-bold">~</span>
-                <input type="number" min="1" max="${totalYears}" value="${stage.endYear}" class="stage-field w-14 p-1.5 border border-slate-300 rounded-lg text-center font-bold text-slate-900" data-idx="${idx}" data-prop="endYear">
+                <input type="number" min="1" max="${totalYears}" value="${stage.endYear}" class="stage-field w-14 p-1.5 border border-slate-300 rounded-lg text-center font-bold text-slate-900 dark:border-slate-600 dark:text-slate-100" data-idx="${idx}" data-prop="endYear">
                 <span class="font-bold">年</span>
               </div>
             </div>
             <div class="col-span-4">
-              <label class="text-slate-600 font-bold block mb-1">提領法則</label>
-              <select class="stage-field w-full p-1.5 border border-slate-300 rounded-lg font-bold text-slate-900" data-idx="${idx}" data-prop="withdrawalType">
+              <label class="text-slate-600 font-bold block mb-1 dark:text-slate-400">提領法則</label>
+              <select class="stage-field w-full p-1.5 border border-slate-300 rounded-lg font-bold text-slate-900 dark:border-slate-600 dark:text-slate-100" data-idx="${idx}" data-prop="withdrawalType">
                 <option value="fixed_amount" ${stage.withdrawalType === 'fixed_amount' ? 'selected' : ''}>4% 通膨調整</option>
                 <option value="fixed_percentage" ${stage.withdrawalType === 'fixed_percentage' ? 'selected' : ''}>固定比例</option>
                 <option value="guyton_klinger" ${stage.withdrawalType === 'guyton_klinger' ? 'selected' : ''}>護欄法則</option>
+                <option value="floor_ceiling" ${stage.withdrawalType === 'floor_ceiling' ? 'selected' : ''}>上下限保護 (±5%)</option>
               </select>
             </div>
             <div class="col-span-3">
-              <label class="text-slate-600 font-bold block mb-1">提領率 (%)</label>
-              <input type="number" step="0.1" min="0.5" max="15" value="${(stage.rate * 100).toFixed(1)}" class="stage-field w-full p-1.5 border border-slate-300 rounded-lg font-bold text-slate-900" data-idx="${idx}" data-prop="rate">
+              <label class="text-slate-600 font-bold block mb-1 dark:text-slate-400">提領率 (%)</label>
+              <input type="number" step="0.1" min="0.5" max="15" value="${(stage.rate * 100).toFixed(1)}" class="stage-field w-full p-1.5 border border-slate-300 rounded-lg font-bold text-slate-900 dark:border-slate-600 dark:text-slate-100" data-idx="${idx}" data-prop="rate">
+            </div>
+            <div class="col-span-7">
+              <label class="text-slate-600 font-bold block mb-1 dark:text-slate-400">首年固定金額 (${currSymbol}，留 0 則改用提領率)</label>
+              <input type="number" step="1000" min="0" value="${stage.customAmount || 0}" class="stage-field w-full p-1.5 border border-slate-300 rounded-lg font-bold text-slate-900 dark:border-slate-600 dark:text-slate-100" data-idx="${idx}" data-prop="customAmount">
+            </div>
+            <div class="col-span-5 flex items-end pb-1.5">
+              <label class="flex items-center gap-2 text-slate-600 font-bold cursor-pointer dark:text-slate-400">
+                <input type="checkbox" ${stage.adjustInflation !== false ? 'checked' : ''} class="stage-field w-4 h-4 rounded accent-purple-600" data-idx="${idx}" data-prop="adjustInflation">
+                隨通膨調升
+              </label>
             </div>
           </div>
         `;
@@ -1315,12 +1361,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const prop = e.target.dataset.prop;
         let val = e.target.value;
 
-        if (prop === 'rate') {
-          val = (parseFloat(val) || 4.0) / 100;
-        } else if (['startYear', 'endYear', 'year', 'amount'].includes(prop)) {
+        if (prop === 'rate' || prop === 'growthRate') {
+          val = (parseFloat(val) || 0) / 100;
+        } else if (['startYear', 'endYear', 'year', 'amount', 'customAmount'].includes(prop)) {
           val = parseFloat(val) || 0;
+        } else if (prop === 'adjustInflation') {
+          val = e.target.checked;
         }
         state.cashflowStages[idx][prop] = val;
+        runMonteCarlo();
       });
     });
 
@@ -1329,6 +1378,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const idx = parseInt(btn.dataset.idx);
         state.cashflowStages.splice(idx, 1);
         renderCashflowStages();
+        runMonteCarlo();
       });
     });
   }
@@ -1365,6 +1415,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
     renderCashflowStages();
+    runMonteCarlo();
   }
 
   function loadStagePreset() {
@@ -1406,7 +1457,7 @@ document.addEventListener('DOMContentLoaded', () => {
     dom.assetRowsContainer.innerHTML = '';
     state.assets.forEach((asset, idx) => {
       const card = document.createElement('div');
-      card.className = 'p-4 bg-slate-50/95 rounded-2xl border border-slate-200 shadow-2xs space-y-3';
+      card.className = 'p-4 bg-slate-50/95 rounded-2xl border border-slate-200 shadow-2xs space-y-3 dark:bg-slate-900/90 dark:border-slate-700';
 
       let optionsHtml = '';
       Object.keys(HISTORICAL_DATA.assetMeta).forEach(key => {
@@ -1418,36 +1469,36 @@ document.addEventListener('DOMContentLoaded', () => {
         <!-- 第一行：資產選擇與說明標籤 (手機自動斷行) -->
         <div class="flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 sm:gap-3">
           <div class="flex-1 min-w-[200px]">
-            <select class="asset-key-select w-full bg-white border border-slate-300 text-xs sm:text-sm font-bold text-slate-900 rounded-xl p-2 sm:p-2.5 focus:ring-blue-500 shadow-2xs" data-idx="${idx}">
+            <select class="asset-key-select w-full bg-white border border-slate-300 text-xs sm:text-sm font-bold text-slate-900 rounded-xl p-2 sm:p-2.5 focus:ring-blue-500 shadow-2xs dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100" data-idx="${idx}">
               ${optionsHtml}
             </select>
           </div>
-          <div class="flex items-center gap-1 sm:gap-1.5 text-[11px] sm:text-xs font-bold text-slate-600 bg-white px-2.5 py-1.5 rounded-xl border border-slate-200 shrink-0">
+          <div class="flex items-center gap-1 sm:gap-1.5 text-[11px] sm:text-xs font-bold text-slate-600 bg-white px-2.5 py-1.5 rounded-xl border border-slate-200 shrink-0 dark:text-slate-400 dark:bg-slate-800 dark:border-slate-700">
             <span>年化 ${(asset.expectedReturn * 100).toFixed(1)}%</span>
             <span>‧</span>
             <span>波動 ${(asset.stdev * 100).toFixed(1)}%</span>
           </div>
           ${state.assets.length > 1 ? `
-            <button type="button" class="btn-remove-asset p-1.5 sm:p-2 text-slate-400 hover:text-rose-600 rounded-xl hover:bg-rose-50 transition shrink-0" data-idx="${idx}" title="移除此資產">
+            <button type="button" class="btn-remove-asset p-1.5 sm:p-2 text-slate-400 hover:text-rose-600 rounded-xl hover:bg-rose-50 transition shrink-0 dark:text-slate-500 dark:hover:bg-rose-900/30 dark:hover:text-rose-400" data-idx="${idx}" title="移除此資產">
               <i data-lucide="trash-2" class="w-4 h-4 sm:w-5 sm:h-5"></i>
             </button>
           ` : ''}
         </div>
 
         <!-- 第二行：權重滑桿與權重數值輸入框 (手機縱向排列避免擁擠) -->
-        <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-4 bg-white p-2.5 sm:p-3 rounded-xl border border-slate-200">
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-4 bg-white p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:bg-slate-800 dark:border-slate-700">
           <div class="flex items-center gap-2 flex-1">
-            <span class="text-xs sm:text-sm font-extrabold text-slate-800 shrink-0">配置比例:</span>
-            <input type="range" class="asset-weight-range w-full h-2.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600" min="0" max="100" step="1" value="${asset.weight}" data-idx="${idx}">
+            <span class="text-xs sm:text-sm font-extrabold text-slate-800 shrink-0 dark:text-slate-200">配置比例:</span>
+            <input type="range" class="asset-weight-range w-full h-2.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600 dark:bg-slate-700" min="0" max="100" step="1" value="${asset.weight}" data-idx="${idx}">
           </div>
 
           <div class="flex items-center justify-end gap-1.5 shrink-0">
-            <button type="button" class="btn-weight-adjust px-2.5 py-1 sm:py-1.5 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-800 text-xs font-bold rounded-lg transition" data-idx="${idx}" data-delta="-5">-5%</button>
-            <div class="flex items-center rounded-lg border border-blue-200 bg-blue-50/50 overflow-hidden w-20 sm:w-24">
-              <input type="number" class="asset-weight-input w-full px-1.5 py-1 bg-transparent text-sm sm:text-base font-black text-blue-700 text-right focus:outline-none" min="0" max="100" step="1" value="${asset.weight}" data-idx="${idx}">
+            <button type="button" class="btn-weight-adjust px-2.5 py-1 sm:py-1.5 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-800 text-xs font-bold rounded-lg transition dark:bg-slate-800 dark:hover:bg-slate-600 dark:active:bg-slate-600 dark:text-slate-200" data-idx="${idx}" data-delta="-5">-5%</button>
+            <div class="flex items-center rounded-lg border border-blue-200 bg-blue-50/50 overflow-hidden w-20 sm:w-24 dark:border-blue-800/50 dark:bg-blue-950/20">
+              <input type="number" class="asset-weight-input w-full px-1.5 py-1 bg-transparent text-sm sm:text-base font-black text-blue-700 text-right focus:outline-none dark:text-blue-400" min="0" max="100" step="1" value="${asset.weight}" data-idx="${idx}">
               <span class="px-1.5 text-xs font-black text-blue-500">%</span>
             </div>
-            <button type="button" class="btn-weight-adjust px-2.5 py-1 sm:py-1.5 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-800 text-xs font-bold rounded-lg transition" data-idx="${idx}" data-delta="5">+5%</button>
+            <button type="button" class="btn-weight-adjust px-2.5 py-1 sm:py-1.5 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-800 text-xs font-bold rounded-lg transition dark:bg-slate-800 dark:hover:bg-slate-600 dark:active:bg-slate-600 dark:text-slate-200" data-idx="${idx}" data-delta="5">+5%</button>
           </div>
         </div>
       `;
@@ -1472,6 +1523,7 @@ document.addEventListener('DOMContentLoaded', () => {
         state.assets[idx].stdev = meta.defaultStDev || 0.18;
         renderAssetRows();
         renderPortfolioModel();
+        runMonteCarlo();
       });
     });
 
@@ -1485,6 +1537,10 @@ document.addEventListener('DOMContentLoaded', () => {
         updateTotalWeightBadge();
         renderPortfolioModel();
       });
+      // 拖曳放開才觸發完整重算，避免拖曳過程中連續觸發昂貴的模擬運算
+      input.addEventListener('change', () => {
+        runMonteCarlo();
+      });
     });
 
     document.querySelectorAll('.asset-weight-input').forEach(input => {
@@ -1496,6 +1552,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (rangeInput) rangeInput.value = val;
         updateTotalWeightBadge();
         renderPortfolioModel();
+        runMonteCarlo();
       });
     });
 
@@ -1511,6 +1568,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (numInput) numInput.value = newWeight;
         updateTotalWeightBadge();
         renderPortfolioModel();
+        runMonteCarlo();
       });
     });
 
@@ -1521,6 +1579,7 @@ document.addEventListener('DOMContentLoaded', () => {
           state.assets.splice(idx, 1);
           renderAssetRows();
           renderPortfolioModel();
+          runMonteCarlo();
         }
       });
     });
@@ -1538,6 +1597,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     renderAssetRows();
     renderPortfolioModel();
+    runMonteCarlo();
   }
 
   function autoBalanceWeights() {
@@ -1550,6 +1610,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     renderAssetRows();
     renderPortfolioModel();
+    runMonteCarlo();
   }
 
   function updateTotalWeightBadge() {
@@ -1626,14 +1687,9 @@ document.addEventListener('DOMContentLoaded', () => {
         config.cashflowStages = state.cashflowStages;
         config.assets = state.assets;
 
-        // ── 偵錯：印出引擎接收的提領參數與計算結果
-        console.log(`[模擬參數] 退休開始年: 第 ${config.retirementStartYear} 年 | 提領模式: ${isAmountMode ? '固定金額' : '提領率'} | 年提領: NT$ ${(annualCustomAmount/10000).toFixed(0)} 萬 | 初始本金: NT$ ${(config.initialInvestment/10000).toFixed(0)} 萬`);
-
         const results = MonteCarloEngine.runSimulation(config);
         state.lastResults = results;
         state.lastConfig = config;
-
-        console.log(`[運算結果] 存活率: ${results.successRate}% | 破產機率: ${results.ruinProbability}% | 破產中位年: 第 ${results.medianRuinYear || '無破產'} 年 | 中位數終值: NT$ ${(results.summaryStats.real.p50/10000).toFixed(1)} 萬`);
 
         const duration = Math.max(1, Math.round(performance.now() - t0));
 
@@ -1805,6 +1861,8 @@ document.addEventListener('DOMContentLoaded', () => {
       state.trajectoryChart.destroy();
     }
 
+    const theme = getChartTheme();
+
     state.trajectoryChart = new Chart(ctx, {
       type: 'line',
       data: { labels, datasets },
@@ -1833,13 +1891,14 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         scales: {
           x: {
-            grid: { color: 'rgba(226, 232, 240, 0.6)' },
-            ticks: { font: { size: 12, weight: '600' } }
+            grid: { color: theme.grid },
+            ticks: { font: { size: 12, weight: '600' }, color: theme.tick }
           },
           y: {
-            grid: { color: 'rgba(226, 232, 240, 0.6)' },
+            grid: { color: theme.grid },
             ticks: {
               font: { size: 12, weight: '600' },
+              color: theme.tick,
               callback: (val) => `${curr} ${formatCurrencyShort(val)}`
             }
           }
@@ -1859,6 +1918,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (state.survivalChart) {
       state.survivalChart.destroy();
     }
+
+    const theme = getChartTheme();
 
     state.survivalChart = new Chart(ctx, {
       type: 'line',
@@ -1893,15 +1954,16 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         scales: {
           x: {
-            grid: { color: 'rgba(226, 232, 240, 0.6)' },
-            ticks: { font: { size: 12, weight: '600' } }
+            grid: { color: theme.grid },
+            ticks: { font: { size: 12, weight: '600' }, color: theme.tick }
           },
           y: {
             min: 0,
             max: 100,
-            grid: { color: 'rgba(226, 232, 240, 0.6)' },
+            grid: { color: theme.grid },
             ticks: {
               font: { size: 12, weight: '600' },
+              color: theme.tick,
               callback: (val) => `${val}%`
             }
           }
@@ -1937,14 +1999,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     rows.forEach(r => {
       const tr = document.createElement('tr');
-      tr.className = `hover:bg-slate-50 transition ${r.highlight ? 'bg-blue-50/30' : ''}`;
+      tr.className = `hover:bg-slate-50 dark:hover:bg-slate-700/50 transition ${r.highlight ? 'bg-blue-50/30 dark:bg-blue-950/20' : ''}`;
       tr.innerHTML = `
-        <td class="py-3 px-4 text-xs sm:text-sm font-bold text-slate-800">${r.name}</td>
-        <td class="py-3 px-3 text-xs sm:text-sm text-rose-700 font-bold">${r.vals[0]}</td>
-        <td class="py-3 px-3 text-xs sm:text-sm text-amber-700 font-bold">${r.vals[1]}</td>
-        <td class="py-3 px-3 text-xs sm:text-sm text-indigo-700 font-black">${r.vals[2]}</td>
-        <td class="py-3 px-3 text-xs sm:text-sm text-blue-700 font-bold">${r.vals[3]}</td>
-        <td class="py-3 px-3 text-xs sm:text-sm text-emerald-700 font-bold">${r.vals[4]}</td>
+        <td class="py-3 px-4 text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200">${r.name}</td>
+        <td class="py-3 px-3 text-xs sm:text-sm text-rose-700 font-bold dark:text-rose-400">${r.vals[0]}</td>
+        <td class="py-3 px-3 text-xs sm:text-sm text-amber-700 font-bold dark:text-amber-400">${r.vals[1]}</td>
+        <td class="py-3 px-3 text-xs sm:text-sm text-indigo-700 font-black dark:text-indigo-400">${r.vals[2]}</td>
+        <td class="py-3 px-3 text-xs sm:text-sm text-blue-700 font-bold dark:text-blue-400">${r.vals[3]}</td>
+        <td class="py-3 px-3 text-xs sm:text-sm text-emerald-700 font-bold dark:text-emerald-400">${r.vals[4]}</td>
       `;
       dom.performanceSummaryBody.appendChild(tr);
     });
@@ -1964,6 +2026,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (state.histogramChart) {
       state.histogramChart.destroy();
     }
+
+    const theme = getChartTheme();
 
     state.histogramChart = new Chart(ctx, {
       type: 'bar',
@@ -1995,11 +2059,11 @@ document.addEventListener('DOMContentLoaded', () => {
         scales: {
           x: {
             grid: { display: false },
-            ticks: { font: { size: 11, weight: '600' }, maxRotation: 45, minRotation: 30 }
+            ticks: { font: { size: 11, weight: '600' }, color: theme.tick, maxRotation: 45, minRotation: 30 }
           },
           y: {
-            grid: { color: 'rgba(226, 232, 240, 0.6)' },
-            ticks: { font: { size: 12, weight: '600' } }
+            grid: { color: theme.grid },
+            ticks: { font: { size: 12, weight: '600' }, color: theme.tick }
           }
         }
       }
@@ -2012,15 +2076,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     results.yearlyTable.forEach(row => {
       const tr = document.createElement('tr');
-      tr.className = 'hover:bg-slate-50/90 transition text-sm';
+      tr.className = 'hover:bg-slate-50/90 transition text-sm dark:hover:bg-slate-700/50';
       tr.innerHTML = `
-        <td class="py-3 px-3.5 font-bold text-slate-800">第 ${row.year} 年</td>
-        <td class="py-3 px-3.5 font-black text-blue-700">${curr} ${formatCurrencyShort(row.realBalance)}</td>
-        <td class="py-3 px-3.5 text-emerald-700 font-bold">${curr} ${formatCurrencyShort(row.realP90)}</td>
-        <td class="py-3 px-3.5 text-rose-700 font-bold">${curr} ${formatCurrencyShort(row.realP10)}</td>
-        <td class="py-3 px-3.5 text-slate-700 font-semibold">${row.realCashflow !== 0 ? ((row.realCashflow > 0 ? '+' : '') + curr + ' ' + formatCurrencyShort(row.realCashflow)) : '--'}</td>
-        <td class="py-3 px-3.5 font-bold text-slate-900">${curr} ${formatCurrencyShort(row.nominalBalance)}</td>
-        <td class="py-3 px-3.5 text-slate-600 font-medium">${row.nominalCashflow !== 0 ? ((row.nominalCashflow > 0 ? '+' : '') + curr + ' ' + formatCurrencyShort(row.nominalCashflow)) : '--'}</td>
+        <td class="py-3 px-3.5 font-bold text-slate-800 dark:text-slate-200">第 ${row.year} 年</td>
+        <td class="py-3 px-3.5 font-black text-blue-700 dark:text-blue-400">${curr} ${formatCurrencyShort(row.realBalance)}</td>
+        <td class="py-3 px-3.5 text-emerald-700 font-bold dark:text-emerald-400">${curr} ${formatCurrencyShort(row.realP90)}</td>
+        <td class="py-3 px-3.5 text-rose-700 font-bold dark:text-rose-400">${curr} ${formatCurrencyShort(row.realP10)}</td>
+        <td class="py-3 px-3.5 text-slate-700 font-semibold dark:text-slate-300">${row.realCashflow !== 0 ? ((row.realCashflow > 0 ? '+' : '') + curr + ' ' + formatCurrencyShort(row.realCashflow)) : '--'}</td>
+        <td class="py-3 px-3.5 font-bold text-slate-900 dark:text-slate-100">${curr} ${formatCurrencyShort(row.nominalBalance)}</td>
+        <td class="py-3 px-3.5 text-slate-600 font-medium dark:text-slate-400">${row.nominalCashflow !== 0 ? ((row.nominalCashflow > 0 ? '+' : '') + curr + ' ' + formatCurrencyShort(row.nominalCashflow)) : '--'}</td>
       `;
       dom.yearlyTableBody.appendChild(tr);
     });
@@ -2058,7 +2122,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     items.push(`📉 <strong>波動與最大回撤</strong>：此配置在中位數情境下面臨的最大帳面回撤為 <strong>${(results.maxDrawdownStats.median * 100).toFixed(1)}%</strong>（最悲觀曾達 ${(results.maxDrawdownStats.worst * 100).toFixed(1)}%）。`);
 
-    dom.simulationInsights.innerHTML = items.map(t => `<div class="p-3.5 bg-slate-50/90 rounded-2xl border border-slate-200 text-sm leading-relaxed">${t}</div>`).join('');
+    dom.simulationInsights.innerHTML = items.map(t => `<div class="p-3.5 bg-slate-50/90 rounded-2xl border border-slate-200 text-sm leading-relaxed dark:bg-slate-800/80 dark:border-slate-700">${t}</div>`).join('');
   }
 
   function handleExportCSV() {

@@ -274,7 +274,7 @@ class MonteCarloEngine {
                       break;
                     }
                     case 'guyton_klinger': {
-                      let targetW = wState.prevWithdrawal * (1 + yearInflation);
+                      let targetW = wState.prevWithdrawal * (y === stage.startYear ? 1 : (1 + yearInflation));
                       const currentWBR = targetW / (startYearBalance || 1);
                       if (currentWBR > wState.initialRate * 1.2 && y < stage.endYear - 3) {
                         targetW *= 0.90;
@@ -282,6 +282,12 @@ class MonteCarloEngine {
                         targetW *= 1.10;
                       }
                       withdrawalAmt = targetW;
+                      break;
+                    }
+                    case 'floor_ceiling': {
+                      const baseW = wState.prevWithdrawal * (y === stage.startYear ? 1 : (1 + yearInflation));
+                      const pctW = startYearBalance * (stage.rate || 0.04);
+                      withdrawalAmt = Math.max(baseW * 0.95, Math.min(baseW * 1.05, pctW));
                       break;
                     }
                     default:
@@ -343,7 +349,7 @@ class MonteCarloEngine {
                   break;
                 }
                 case 'guyton_klinger': {
-                  let targetW = prevSimpleWithdrawal * (1 + yearInflation);
+                  let targetW = prevSimpleWithdrawal * (y === rStartYear ? 1 : (1 + yearInflation));
                   const currentWBR = targetW / (startYearBalance || 1);
                   if (currentWBR > baseRate * 1.2 && y < years - 3) {
                     targetW *= 0.90;
@@ -354,7 +360,7 @@ class MonteCarloEngine {
                   break;
                 }
                 case 'floor_ceiling': {
-                  let baseW = prevSimpleWithdrawal * (1 + yearInflation);
+                  let baseW = prevSimpleWithdrawal * (y === rStartYear ? 1 : (1 + yearInflation));
                   const pctW = startYearBalance * baseRate;
                   currentWithdrawal = Math.max(baseW * 0.95, Math.min(baseW * 1.05, pctW));
                   break;

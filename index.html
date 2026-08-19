@@ -5,6 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>台灣投資組合蒙地卡羅模擬器 | Taiwan Portfolio Visualizer</title>
   
+  <!-- 深色模式：在畫面繪製前就先套用，避免載入瞬間閃爍錯誤主題 -->
+  <script>
+    (function () {
+      try {
+        const saved = localStorage.getItem('tw_mc_theme');
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const isDark = saved ? saved === 'dark' : prefersDark;
+        if (isDark) document.documentElement.classList.add('dark');
+      } catch (e) {}
+    })();
+  </script>
+
   <!-- Tailwind CSS (本地版，避免 Edge Tracking Prevention 封鎖 CDN) -->
   <script src="vendor/tailwind.min.js"></script>
   <script>
@@ -37,10 +49,10 @@
   <!-- Custom CSS -->
   <link rel="stylesheet" href="css/styles.css">
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen text-base transition-colors duration-200">
+<body class="bg-slate-50 text-slate-800 min-h-screen text-base transition-colors duration-200 dark:bg-slate-900 dark:text-slate-200">
 
   <!-- 頂部導航列 (完美適配手機與寬螢幕版面) -->
-  <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-xs no-print">
+  <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-xs no-print dark:bg-slate-900/90 dark:border-slate-700">
     <div class="max-w-[1700px] w-full mx-auto px-3.5 sm:px-6 xl:px-8 py-2.5 sm:py-3.5 flex items-center justify-between gap-2.5">
       <!-- 頂部左側：Logo + 標題 -->
       <div class="flex items-center gap-2.5 min-w-0 flex-1">
@@ -49,25 +61,31 @@
         </div>
         <div class="min-w-0 flex-1">
           <div class="flex items-center gap-1.5 flex-wrap">
-            <h1 class="text-sm sm:text-xl font-black text-slate-900 leading-tight">
+            <h1 class="text-sm sm:text-xl font-black text-slate-900 leading-tight dark:text-slate-100">
               台灣投資組合蒙地卡羅模擬器
             </h1>
-            <span class="text-[10px] sm:text-xs bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded-full whitespace-nowrap hidden xs:inline-block">旗艦對標</span>
+            <span class="text-[10px] sm:text-xs bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded-full whitespace-nowrap hidden xs:inline-block dark:bg-blue-900/40 dark:text-blue-300">旗艦對標</span>
           </div>
-          <p class="text-[11px] text-slate-500 hidden md:block font-medium mt-0.5">多時期現金流排程 ‧ 存活率曲線 ‧ 完整量化績效總表 ‧ 實質通膨折算</p>
+          <p class="text-[11px] text-slate-500 hidden md:block font-medium mt-0.5 dark:text-slate-400">多時期現金流排程 ‧ 存活率曲線 ‧ 完整量化績效總表 ‧ 實質通膨折算</p>
         </div>
       </div>
 
       <!-- 右側功能快捷列 -->
       <div class="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+        <!-- 深色/淺色模式切換 -->
+        <button id="btn-theme-toggle" title="切換淺色 / 深色主題" class="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 text-slate-600 bg-white border border-slate-300 rounded-xl hover:bg-slate-50 shadow-2xs transition dark:text-amber-300 dark:bg-slate-800 dark:border-slate-600 dark:hover:bg-slate-700/50 shrink-0 dark:text-slate-400">
+          <i data-lucide="sun" class="w-4 h-4 sm:w-[18px] sm:h-[18px] dark:hidden"></i>
+          <i data-lucide="moon" class="w-4 h-4 sm:w-[18px] sm:h-[18px] hidden dark:block"></i>
+        </button>
+
         <!-- 幣別切換 -->
-        <div class="flex items-center bg-slate-100 p-0.5 sm:p-1 rounded-xl border border-slate-200 text-xs sm:text-sm font-bold">
-          <button id="btn-curr-twd" class="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-white text-blue-600 shadow-xs font-black text-xs sm:text-sm transition-all">NT$ 台幣</button>
-          <button id="btn-curr-usd" class="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-slate-600 hover:text-slate-900 text-xs sm:text-sm transition-all">USD 美元</button>
+        <div class="flex items-center bg-slate-100 p-0.5 sm:p-1 rounded-xl border border-slate-200 text-xs sm:text-sm font-bold dark:bg-slate-800 dark:border-slate-700">
+          <button id="btn-curr-twd" class="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-white text-blue-600 shadow-xs font-black text-xs sm:text-sm transition-all dark:bg-slate-600 dark:text-blue-300 dark:bg-slate-800">NT$ 台幣</button>
+          <button id="btn-curr-usd" class="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-slate-600 hover:text-slate-900 text-xs sm:text-sm transition-all dark:text-slate-400 dark:hover:text-slate-100">USD 美元</button>
         </div>
 
         <!-- 匯出 CSV (手機版縮為圖示按鈕) -->
-        <button id="btn-export-csv" title="匯出完整 CSV 報表" class="flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 sm:py-2 text-xs sm:text-sm font-bold text-slate-700 bg-white border border-slate-300 rounded-xl hover:bg-slate-50 shadow-2xs transition">
+        <button id="btn-export-csv" title="匯出完整 CSV 報表" class="flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 sm:py-2 text-xs sm:text-sm font-bold text-slate-700 bg-white border border-slate-300 rounded-xl hover:bg-slate-50 shadow-2xs transition dark:text-slate-300 dark:bg-slate-800 dark:border-slate-600 dark:hover:bg-slate-700/50">
           <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-600"></i>
           <span class="hidden sm:inline">匯出 CSV</span>
         </button>
@@ -114,22 +132,22 @@
       <div id="section-params" class="lg:col-span-5 xl:col-span-4 space-y-3.5 sm:space-y-4 no-print scroll-mt-20">
         
         <!-- 經典配置範本選擇器 -->
-        <div class="glass-card rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200">
+        <div class="glass-card rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200 dark:border-slate-700">
           <div class="flex items-center justify-between mb-1.5">
-            <label class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+            <label class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2 dark:text-slate-200">
               <i data-lucide="sparkles" class="w-4 h-4 text-amber-500"></i>
               一鍵套用經典投資組合
             </label>
           </div>
-          <select id="preset-selector" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm sm:text-base rounded-xl focus:ring-blue-500 focus:border-blue-500 p-2.5 transition font-semibold">
+          <select id="preset-selector" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm sm:text-base rounded-xl focus:ring-blue-500 focus:border-blue-500 p-2.5 transition font-semibold dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100">
             <option value="">-- 請選擇經典投資組合範本 --</option>
           </select>
-          <p id="preset-desc" class="text-xs sm:text-sm text-slate-500 mt-2 italic leading-relaxed"></p>
+          <p id="preset-desc" class="text-xs sm:text-sm text-slate-500 mt-2 italic leading-relaxed dark:text-slate-400"></p>
         </div>
 
         <!-- 1. 資金與模擬參數 (Simulation Model Configuration) -->
-        <div class="glass-card rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200 space-y-4">
-          <h2 class="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-2.5">
+        <div class="glass-card rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200 space-y-4 dark:border-slate-700">
+          <h2 class="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-2.5 dark:text-slate-100 dark:border-slate-700/60">
             <i data-lucide="sliders" class="w-4 h-4 text-blue-600"></i>
             模擬參數與模型設定 (Model Configuration)
           </h2>
@@ -137,68 +155,68 @@
           <!-- 初始本金 -->
           <div>
             <div class="flex justify-between items-center mb-1">
-              <label class="text-xs sm:text-sm font-bold text-slate-800">初始投資本金 (Initial Amount)</label>
-              <span id="initial-amount-display" class="text-xs sm:text-sm font-extrabold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-lg">100 萬元</span>
+              <label class="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200">初始投資本金 (Initial Amount)</label>
+              <span id="initial-amount-display" class="text-xs sm:text-sm font-extrabold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-lg dark:bg-blue-950/30">100 萬元</span>
             </div>
             
-            <div class="flex items-center rounded-xl border border-slate-300 bg-slate-50 overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 shadow-2xs">
-              <span id="curr-prefix-1" class="px-3.5 py-2 bg-slate-100 border-r border-slate-200 text-sm font-bold text-slate-600 shrink-0">NT$</span>
+            <div class="flex items-center rounded-xl border border-slate-300 bg-slate-50 overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 shadow-2xs dark:border-slate-600 dark:bg-slate-900">
+              <span id="curr-prefix-1" class="px-3.5 py-2 bg-slate-100 border-r border-slate-200 text-sm font-bold text-slate-600 shrink-0 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400">NT$</span>
               <input type="number" id="input-initial-amount" value="1000000" step="50000" min="0" 
-                class="w-full px-3 py-2 bg-transparent text-sm sm:text-base font-bold text-slate-900 focus:outline-none">
+                class="w-full px-3 py-2 bg-transparent text-sm sm:text-base font-bold text-slate-900 focus:outline-none dark:text-slate-100">
             </div>
 
             <!-- 快速金額按鈕 -->
             <div class="flex flex-wrap gap-1.5 mt-2">
-              <button type="button" class="btn-quick-amount px-2.5 py-1 text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold transition" data-val="0">0 (純定額)</button>
-              <button type="button" class="btn-quick-amount px-2.5 py-1 text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold transition" data-val="500000">50萬</button>
-              <button type="button" class="btn-quick-amount px-2.5 py-1 text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold transition" data-val="1000000">100萬</button>
-              <button type="button" class="btn-quick-amount px-2.5 py-1 text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold transition" data-val="3000000">300萬</button>
-              <button type="button" class="btn-quick-amount px-2.5 py-1 text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold transition" data-val="5000000">500萬</button>
-              <button type="button" class="btn-quick-amount px-2.5 py-1 text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold transition" data-val="10000000">1000萬</button>
+              <button type="button" class="btn-quick-amount px-2.5 py-1 text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold transition dark:bg-slate-800 dark:hover:bg-slate-600 dark:text-slate-300" data-val="0">0 (純定額)</button>
+              <button type="button" class="btn-quick-amount px-2.5 py-1 text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold transition dark:bg-slate-800 dark:hover:bg-slate-600 dark:text-slate-300" data-val="500000">50萬</button>
+              <button type="button" class="btn-quick-amount px-2.5 py-1 text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold transition dark:bg-slate-800 dark:hover:bg-slate-600 dark:text-slate-300" data-val="1000000">100萬</button>
+              <button type="button" class="btn-quick-amount px-2.5 py-1 text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold transition dark:bg-slate-800 dark:hover:bg-slate-600 dark:text-slate-300" data-val="3000000">300萬</button>
+              <button type="button" class="btn-quick-amount px-2.5 py-1 text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold transition dark:bg-slate-800 dark:hover:bg-slate-600 dark:text-slate-300" data-val="5000000">500萬</button>
+              <button type="button" class="btn-quick-amount px-2.5 py-1 text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold transition dark:bg-slate-800 dark:hover:bg-slate-600 dark:text-slate-300" data-val="10000000">1000萬</button>
             </div>
           </div>
 
           <!-- 模擬預測年限 (Simulation Period in Years) -->
           <div class="space-y-2">
             <div class="flex justify-between items-center">
-              <label class="text-xs sm:text-sm font-bold text-slate-800 flex items-center gap-1.5">
+              <label class="text-xs sm:text-sm font-bold text-slate-800 flex items-center gap-1.5 dark:text-slate-200">
                 <i data-lucide="clock" class="w-4 h-4 text-blue-600"></i>
                 模擬預測年限 (Simulation Period in Years)
               </label>
-              <span class="text-xs text-slate-500 font-semibold">1 ~ 60 年</span>
+              <span class="text-xs text-slate-500 font-semibold dark:text-slate-400">1 ~ 60 年</span>
             </div>
 
             <!-- 雙向連動：滑桿 + 獨立大字數值輸入框 -->
-            <div class="flex items-center gap-3 bg-slate-50 p-2 rounded-xl border border-slate-200">
+            <div class="flex items-center gap-3 bg-slate-50 p-2 rounded-xl border border-slate-200 dark:bg-slate-900 dark:border-slate-700">
               <input type="range" id="input-years" min="1" max="60" value="30" step="1" 
-                class="w-full h-2.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
+                class="w-full h-2.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600 dark:bg-slate-700">
               
-              <div class="flex items-center rounded-xl border border-blue-300 bg-white overflow-hidden shadow-2xs shrink-0 w-24">
+              <div class="flex items-center rounded-xl border border-blue-300 bg-white overflow-hidden shadow-2xs shrink-0 w-24 dark:border-blue-700/50 dark:bg-slate-800">
                 <input type="number" id="input-years-number" min="1" max="60" value="30" step="1"
-                  class="w-full px-2 py-1 text-center text-base font-black text-blue-700 bg-transparent focus:outline-none">
-                <span class="px-2 py-1 text-xs font-bold text-slate-600 bg-slate-100 border-l border-slate-200">年</span>
+                  class="w-full px-2 py-1 text-center text-base font-black text-blue-700 bg-transparent focus:outline-none dark:text-blue-400">
+                <span class="px-2 py-1 text-xs font-bold text-slate-600 bg-slate-100 border-l border-slate-200 dark:text-slate-400 dark:bg-slate-800 dark:border-slate-700">年</span>
               </div>
             </div>
 
             <!-- 常用年期快捷按鈕組 -->
             <div class="flex flex-wrap gap-1.5 pt-0.5">
-              <button type="button" class="btn-quick-years px-2 py-1 text-xs bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 rounded-lg font-bold transition" data-val="3">3年</button>
-              <button type="button" class="btn-quick-years px-2 py-1 text-xs bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 rounded-lg font-bold transition" data-val="5">5年 (短期)</button>
-              <button type="button" class="btn-quick-years px-2 py-1 text-xs bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 rounded-lg font-bold transition" data-val="10">10年 (存股)</button>
-              <button type="button" class="btn-quick-years px-2 py-1 text-xs bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 rounded-lg font-bold transition" data-val="15">15年</button>
-              <button type="button" class="btn-quick-years px-2 py-1 text-xs bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 rounded-lg font-bold transition" data-val="20">20年 (置產)</button>
-              <button type="button" class="btn-quick-years px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-lg font-black transition border border-blue-200" data-val="30">30年 (FIRE)</button>
-              <button type="button" class="btn-quick-years px-2 py-1 text-xs bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 rounded-lg font-bold transition" data-val="40">40年</button>
-              <button type="button" class="btn-quick-years px-2 py-1 text-xs bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 rounded-lg font-bold transition" data-val="50">50年</button>
-              <button type="button" class="btn-quick-years px-2 py-1 text-xs bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 rounded-lg font-bold transition" data-val="60">60年</button>
+              <button type="button" class="btn-quick-years px-2 py-1 text-xs bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 rounded-lg font-bold transition dark:bg-slate-800 dark:hover:bg-blue-900/30 dark:text-slate-300 dark:hover:text-blue-400" data-val="3">3年</button>
+              <button type="button" class="btn-quick-years px-2 py-1 text-xs bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 rounded-lg font-bold transition dark:bg-slate-800 dark:hover:bg-blue-900/30 dark:text-slate-300 dark:hover:text-blue-400" data-val="5">5年 (短期)</button>
+              <button type="button" class="btn-quick-years px-2 py-1 text-xs bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 rounded-lg font-bold transition dark:bg-slate-800 dark:hover:bg-blue-900/30 dark:text-slate-300 dark:hover:text-blue-400" data-val="10">10年 (存股)</button>
+              <button type="button" class="btn-quick-years px-2 py-1 text-xs bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 rounded-lg font-bold transition dark:bg-slate-800 dark:hover:bg-blue-900/30 dark:text-slate-300 dark:hover:text-blue-400" data-val="15">15年</button>
+              <button type="button" class="btn-quick-years px-2 py-1 text-xs bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 rounded-lg font-bold transition dark:bg-slate-800 dark:hover:bg-blue-900/30 dark:text-slate-300 dark:hover:text-blue-400" data-val="20">20年 (置產)</button>
+              <button type="button" class="btn-quick-years px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-lg font-black transition border border-blue-200 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-800/50" data-val="30">30年 (FIRE)</button>
+              <button type="button" class="btn-quick-years px-2 py-1 text-xs bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 rounded-lg font-bold transition dark:bg-slate-800 dark:hover:bg-blue-900/30 dark:text-slate-300 dark:hover:text-blue-400" data-val="40">40年</button>
+              <button type="button" class="btn-quick-years px-2 py-1 text-xs bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 rounded-lg font-bold transition dark:bg-slate-800 dark:hover:bg-blue-900/30 dark:text-slate-300 dark:hover:text-blue-400" data-val="50">50年</button>
+              <button type="button" class="btn-quick-years px-2 py-1 text-xs bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 rounded-lg font-bold transition dark:bg-slate-800 dark:hover:bg-blue-900/30 dark:text-slate-300 dark:hover:text-blue-400" data-val="60">60年</button>
             </div>
           </div>
 
           <!-- 模擬次數與隨機模型 -->
           <div class="grid grid-cols-2 gap-3 pt-0.5">
             <div>
-              <label class="text-xs sm:text-sm font-bold text-slate-800 block mb-1">模擬運算次數</label>
-              <select id="select-trials" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-xs sm:text-sm font-semibold rounded-xl p-2 focus:ring-blue-500">
+              <label class="text-xs sm:text-sm font-bold text-slate-800 block mb-1 dark:text-slate-200">模擬運算次數</label>
+              <select id="select-trials" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-xs sm:text-sm font-semibold rounded-xl p-2 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100">
                 <option value="1000">1,000 次 (極速)</option>
                 <option value="2000" selected>2,000 次 (標準)</option>
                 <option value="5000">5,000 次 (高精準)</option>
@@ -207,14 +225,14 @@
             </div>
             <div>
               <div class="flex items-center justify-between mb-1">
-                <label class="text-xs sm:text-sm font-bold text-slate-800 flex items-center gap-1">
+                <label class="text-xs sm:text-sm font-bold text-slate-800 flex items-center gap-1 dark:text-slate-200">
                   隨機模擬模型
                   <span class="text-blue-500" title="點擊切換查看詳細白話解說">
                     <i data-lucide="help-circle" class="w-3.5 h-3.5 inline"></i>
                   </span>
                 </label>
               </div>
-              <select id="select-model" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-xs sm:text-sm font-semibold rounded-xl p-2 focus:ring-blue-500">
+              <select id="select-model" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-xs sm:text-sm font-semibold rounded-xl p-2 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100">
                 <option value="parametric" selected>參數化常態 (Cholesky)</option>
                 <option value="bootstrap">歷史真實抽樣 (Bootstrap)</option>
               </select>
@@ -229,8 +247,8 @@
           <!-- 費用結構與報酬順序風險壓力測試 -->
           <div class="grid grid-cols-2 gap-3 pt-0.5">
             <div>
-              <label class="text-xs sm:text-sm font-bold text-slate-800 block mb-1" title="每年從資產淨值中扣除的內扣管理費">費用結構 (內扣費用)</label>
-              <select id="select-fee-structure" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-xs sm:text-sm font-semibold rounded-xl p-2 focus:ring-blue-500">
+              <label class="text-xs sm:text-sm font-bold text-slate-800 block mb-1 dark:text-slate-200" title="每年從資產淨值中扣除的內扣管理費">費用結構 (內扣費用)</label>
+              <select id="select-fee-structure" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-xs sm:text-sm font-semibold rounded-xl p-2 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100">
                 <option value="0.0" selected>無內扣費用 (0.0%)</option>
                 <option value="0.0005">美股指數 ETF (~0.05%)</option>
                 <option value="0.0035">台股 0050 / 高股息 (~0.35%)</option>
@@ -239,8 +257,8 @@
               </select>
             </div>
             <div>
-              <label class="text-xs sm:text-sm font-bold text-slate-800 block mb-1" title="壓力測試：模擬退休前2年遭遇黑天鵝股災衝擊">報酬順序風險 (壓力測試)</label>
-              <select id="select-sequence-risk" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-xs sm:text-sm font-semibold rounded-xl p-2 focus:ring-blue-500">
+              <label class="text-xs sm:text-sm font-bold text-slate-800 block mb-1 dark:text-slate-200" title="壓力測試：模擬退休前2年遭遇黑天鵝股災衝擊">報酬順序風險 (壓力測試)</label>
+              <select id="select-sequence-risk" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-xs sm:text-sm font-semibold rounded-xl p-2 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100">
                 <option value="none" selected>無調整 (正常隨機)</option>
                 <option value="stress_early">初期逆風測試 (前2年股災)</option>
               </select>
@@ -255,9 +273,9 @@
         </div>
 
         <!-- 2. 通膨與購買力設定專區 -->
-        <div class="glass-card rounded-2xl p-4 sm:p-5 shadow-sm border border-blue-100 bg-gradient-to-br from-white to-blue-50/40 space-y-3.5">
-          <div class="flex items-center justify-between border-b border-blue-100 pb-2.5">
-            <h2 class="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2">
+        <div class="glass-card rounded-2xl p-4 sm:p-5 shadow-sm border border-blue-100 bg-gradient-to-br from-white to-blue-50/40 space-y-3.5 dark:border-blue-800/40">
+          <div class="flex items-center justify-between border-b border-blue-100 pb-2.5 dark:border-blue-800/40">
+            <h2 class="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2 dark:text-slate-100">
               <i data-lucide="flame" class="w-4 h-4 text-orange-500"></i>
               通貨膨脹率設定 (Inflation Model)
             </h2>
@@ -266,8 +284,8 @@
 
           <div class="grid grid-cols-2 gap-3 items-end">
             <div>
-              <label class="text-xs sm:text-sm font-bold text-slate-800 block mb-1">通膨模擬方式</label>
-              <select id="select-inflation-model" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-xs sm:text-sm font-semibold rounded-xl p-2 focus:ring-blue-500">
+              <label class="text-xs sm:text-sm font-bold text-slate-800 block mb-1 dark:text-slate-200">通膨模擬方式</label>
+              <select id="select-inflation-model" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-xs sm:text-sm font-semibold rounded-xl p-2 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100">
                 <option value="constant" selected>固定年通膨率</option>
                 <option value="bootstrap">歷史真實 CPI 抽樣</option>
               </select>
@@ -275,20 +293,20 @@
 
             <!-- 固定通膨輸入框 -->
             <div id="constant-inflation-box">
-              <label class="text-xs sm:text-sm font-bold text-slate-800 block mb-1">預估年通膨率 (%)</label>
-              <div class="flex items-center rounded-xl border border-slate-300 bg-slate-50 overflow-hidden focus-within:ring-2 focus-within:ring-blue-500">
+              <label class="text-xs sm:text-sm font-bold text-slate-800 block mb-1 dark:text-slate-200">預估年通膨率 (%)</label>
+              <div class="flex items-center rounded-xl border border-slate-300 bg-slate-50 overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 dark:border-slate-600 dark:bg-slate-900">
                 <input type="number" id="input-inflation-rate" value="2.0" step="0.1" min="0" max="15" 
-                  class="w-full px-2.5 py-1.5 bg-transparent text-xs sm:text-sm font-bold text-slate-900 focus:outline-none">
-                <span class="px-2.5 text-slate-500 font-bold text-xs">%</span>
+                  class="w-full px-2.5 py-1.5 bg-transparent text-xs sm:text-sm font-bold text-slate-900 focus:outline-none dark:text-slate-100">
+                <span class="px-2.5 text-slate-500 font-bold text-xs dark:text-slate-400">%</span>
               </div>
             </div>
 
             <!-- 歷史真實 CPI 抽樣數據展示框 (切換時顯示平均與極值) -->
             <div id="bootstrap-inflation-box" class="hidden">
-              <label class="text-xs sm:text-sm font-bold text-slate-800 block mb-1">歷史平均 CPI (2000~2025)</label>
-              <div class="flex items-center justify-between px-3 py-1.5 bg-amber-50 border border-amber-300 rounded-xl">
-                <span class="text-xs font-bold text-amber-900">歷史年均</span>
-                <span id="bootstrap-cpi-avg" class="text-sm font-black text-amber-700">1.26%</span>
+              <label class="text-xs sm:text-sm font-bold text-slate-800 block mb-1 dark:text-slate-200">歷史平均 CPI (2000~2025)</label>
+              <div class="flex items-center justify-between px-3 py-1.5 bg-amber-50 border border-amber-300 rounded-xl dark:bg-amber-950/30 dark:border-amber-700/50">
+                <span class="text-xs font-bold text-amber-900 dark:text-amber-200">歷史年均</span>
+                <span id="bootstrap-cpi-avg" class="text-sm font-black text-amber-700 dark:text-amber-400">1.26%</span>
               </div>
             </div>
           </div>
@@ -299,10 +317,10 @@
           </div>
 
           <!-- 通膨購買力折損試算卡片 -->
-          <div class="p-3 bg-white/90 rounded-xl border border-slate-200 text-xs sm:text-sm flex items-center justify-between">
+          <div class="p-3 bg-white/90 rounded-xl border border-slate-200 text-xs sm:text-sm flex items-center justify-between dark:bg-slate-800/90 dark:border-slate-700">
             <div class="space-y-0.5">
-              <span class="text-slate-500 font-medium">在 <strong id="inf-years-text" class="text-slate-800 font-extrabold">30</strong> 年後：</span>
-              <div class="text-slate-800 font-bold">100 萬實質購買力等同於：</div>
+              <span class="text-slate-500 font-medium dark:text-slate-400">在 <strong id="inf-years-text" class="text-slate-800 font-extrabold dark:text-slate-200">30</strong> 年後：</span>
+              <div class="text-slate-800 font-bold dark:text-slate-200">100 萬實質購買力等同於：</div>
             </div>
             <div class="text-right">
               <span id="inf-purchasing-power" class="text-lg sm:text-xl font-black text-indigo-600">55.2 萬元</span>
@@ -312,17 +330,17 @@
         </div>
 
         <!-- 3. 現金流規劃 -->
-        <div class="glass-card rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200 space-y-4">
-          <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
-            <h2 class="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2">
+        <div class="glass-card rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200 space-y-4 dark:border-slate-700">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-2.5 dark:border-slate-700/60">
+            <h2 class="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2 dark:text-slate-100">
               <i data-lucide="arrow-left-right" class="w-4 h-4 text-emerald-600"></i>
               現金流策略規劃 (Cashflows)
             </h2>
             
             <!-- 模式切換 -->
-            <div class="flex items-center bg-slate-100 p-1 rounded-xl text-xs font-bold">
-              <button type="button" id="btn-mode-simple" class="px-2.5 py-1 rounded-lg bg-white text-blue-600 shadow-xs font-bold">標準模式</button>
-              <button type="button" id="btn-mode-advanced" class="px-2.5 py-1 rounded-lg text-slate-500 hover:text-slate-800">多時期排程</button>
+            <div class="flex items-center bg-slate-100 p-1 rounded-xl text-xs font-bold dark:bg-slate-800">
+              <button type="button" id="btn-mode-simple" class="px-2.5 py-1 rounded-lg bg-white text-blue-600 shadow-xs font-bold dark:bg-slate-600 dark:text-blue-300 dark:bg-slate-800">標準模式</button>
+              <button type="button" id="btn-mode-advanced" class="px-2.5 py-1 rounded-lg text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200">多時期排程</button>
             </div>
           </div>
 
@@ -330,74 +348,74 @@
           <div id="simple-cashflow-container" class="space-y-3">
             
             <!-- 何時開始退休提領設定 (重點) -->
-            <div class="p-3.5 bg-indigo-50/80 rounded-2xl border border-indigo-200 space-y-2.5">
+            <div class="p-3.5 bg-indigo-50/80 rounded-2xl border border-indigo-200 space-y-2.5 dark:bg-indigo-950/30 dark:border-indigo-800/50">
               <div class="flex items-center justify-between">
-                <label class="text-xs sm:text-sm font-black text-indigo-950 flex items-center gap-1.5">
+                <label class="text-xs sm:text-sm font-black text-indigo-950 flex items-center gap-1.5 dark:text-indigo-200">
                   <i data-lucide="calendar-check" class="w-4 h-4 text-indigo-600"></i>
                   何時開始退休提領？ (退休開始年份)
                 </label>
-                <span id="lifecycle-badge" class="text-xs font-extrabold text-indigo-800 bg-white px-2.5 py-0.5 rounded-lg border border-indigo-200 shadow-2xs">第 21 年開始</span>
+                <span id="lifecycle-badge" class="text-xs font-extrabold text-indigo-800 bg-white px-2.5 py-0.5 rounded-lg border border-indigo-200 shadow-2xs dark:text-indigo-300 dark:bg-slate-800 dark:border-indigo-800/50">第 21 年開始</span>
               </div>
 
               <!-- 3 大生涯情境直覺一鍵切換 -->
               <div class="grid grid-cols-3 gap-1.5">
-                <button type="button" class="btn-quick-retire py-2 px-1.5 text-xs bg-white hover:bg-indigo-100 text-indigo-900 rounded-xl font-black border border-indigo-200 transition text-center shadow-2xs" data-val="1">
-                  🏖️ 立即退休生活<br><span class="text-[10px] font-normal text-indigo-700">第 1 年起開始提領</span>
+                <button type="button" class="btn-quick-retire py-2 px-1.5 text-xs bg-white hover:bg-indigo-100 text-indigo-900 rounded-xl font-black border border-indigo-200 transition text-center shadow-2xs dark:bg-slate-800 dark:hover:bg-indigo-900/40 dark:text-indigo-200 dark:border-indigo-800/50" data-val="1">
+                  🏖️ 立即退休生活<br><span class="text-[10px] font-normal text-indigo-700 dark:text-indigo-400">第 1 年起開始提領</span>
                 </button>
                 <button type="button" class="btn-quick-retire py-2 px-1.5 text-xs bg-indigo-600 text-white rounded-xl font-black transition border border-indigo-700 shadow-xs text-center" data-val="21">
                   🌱 兩階段 FIRE<br><span class="text-[10px] font-normal text-indigo-200">存20年 ➡️ 第21年退休</span>
                 </button>
-                <button type="button" class="btn-quick-retire py-2 px-1.5 text-xs bg-white hover:bg-indigo-100 text-indigo-900 rounded-xl font-black border border-indigo-200 transition text-center shadow-2xs" data-val="999">
-                  📈 全期資產累積<br><span class="text-[10px] font-normal text-indigo-700">純定期定額，不提領</span>
+                <button type="button" class="btn-quick-retire py-2 px-1.5 text-xs bg-white hover:bg-indigo-100 text-indigo-900 rounded-xl font-black border border-indigo-200 transition text-center shadow-2xs dark:bg-slate-800 dark:hover:bg-indigo-900/40 dark:text-indigo-200 dark:border-indigo-800/50" data-val="999">
+                  📈 全期資產累積<br><span class="text-[10px] font-normal text-indigo-700 dark:text-indigo-400">純定期定額，不提領</span>
                 </button>
               </div>
 
               <!-- 雙向輸入：滑桿 + 獨立數值輸入框 -->
               <div>
-                <div class="flex items-center justify-between text-xs text-indigo-900 font-bold mb-1">
+                <div class="flex items-center justify-between text-xs text-indigo-900 font-bold mb-1 dark:text-indigo-200">
                   <span>或微調自訂開始退休年份：</span>
                   <span class="text-indigo-600 text-[11px]">(滑動即時試算)</span>
                 </div>
-                <div class="flex items-center gap-2.5 bg-white p-2 rounded-xl border border-indigo-200">
+                <div class="flex items-center gap-2.5 bg-white p-2 rounded-xl border border-indigo-200 dark:bg-slate-800 dark:border-indigo-800/50">
                   <input type="range" id="input-retirement-year" min="1" max="31" value="21" step="1" 
-                    class="w-full h-2 bg-indigo-100 rounded-lg appearance-none cursor-pointer accent-indigo-600">
+                    class="w-full h-2 bg-indigo-100 rounded-lg appearance-none cursor-pointer accent-indigo-600 dark:bg-indigo-900/40">
                   
-                  <div class="flex items-center rounded-lg border border-indigo-300 bg-indigo-50/50 overflow-hidden shrink-0 w-24">
+                  <div class="flex items-center rounded-lg border border-indigo-300 bg-indigo-50/50 overflow-hidden shrink-0 w-24 dark:border-indigo-700/50 dark:bg-indigo-950/20">
                     <input type="number" id="input-retirement-year-number" min="1" max="61" value="21" step="1"
-                      class="w-full px-2 py-1 text-center text-sm font-black text-indigo-700 bg-transparent focus:outline-none">
-                    <span class="px-2 text-xs font-bold text-indigo-600 bg-indigo-100 border-l border-indigo-200">年</span>
+                      class="w-full px-2 py-1 text-center text-sm font-black text-indigo-700 bg-transparent focus:outline-none dark:text-indigo-400">
+                    <span class="px-2 text-xs font-bold text-indigo-600 bg-indigo-100 border-l border-indigo-200 dark:bg-indigo-900/40 dark:border-indigo-800/50">年</span>
                   </div>
                 </div>
               </div>
 
               <!-- 生涯時程動態預覽提示 -->
-              <div id="lifecycle-timeline-preview" class="text-xs text-indigo-950 bg-white p-2 rounded-xl border border-indigo-100 font-medium">
+              <div id="lifecycle-timeline-preview" class="text-xs text-indigo-950 bg-white p-2 rounded-xl border border-indigo-100 font-medium dark:text-indigo-200 dark:bg-slate-800 dark:border-indigo-800/40">
                 🌱 <strong>第 1 ~ 20 年</strong>：定期定額累積期 ➡️ 🏖️ <strong>第 21 ~ 30 年</strong>：退休提領期
               </div>
             </div>
 
             <!-- 階段 1：累積期設定 -->
-            <div id="accumulation-fields" class="p-3 bg-slate-50/90 rounded-2xl border border-slate-200 space-y-2.5">
-              <div class="flex items-center justify-between border-b border-slate-200 pb-1.5">
-                <span class="text-xs sm:text-sm font-black text-emerald-800 flex items-center gap-1.5">
+            <div id="accumulation-fields" class="p-3 bg-slate-50/90 rounded-2xl border border-slate-200 space-y-2.5 dark:bg-slate-800/80 dark:border-slate-700">
+              <div class="flex items-center justify-between border-b border-slate-200 pb-1.5 dark:border-slate-700">
+                <span class="text-xs sm:text-sm font-black text-emerald-800 flex items-center gap-1.5 dark:text-emerald-300">
                   <i data-lucide="piggy-bank" class="w-4 h-4 text-emerald-600"></i>
                   階段 1：定期定額累積期設定
                 </span>
-                <span id="accumulation-period-text" class="text-xs text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-md">第 1 ~ 20 年</span>
+                <span id="accumulation-period-text" class="text-xs text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-md dark:bg-emerald-950/30 dark:text-emerald-400">第 1 ~ 20 年</span>
               </div>
 
               <div>
                 <div class="flex justify-between items-center mb-1">
-                  <label class="text-xs sm:text-sm font-bold text-slate-800">定期定額每期投入金額</label>
-                  <span id="contrib-amount-display" class="text-xs sm:text-sm font-extrabold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-lg">每月 20,000 元</span>
+                  <label class="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200">定期定額每期投入金額</label>
+                  <span id="contrib-amount-display" class="text-xs sm:text-sm font-extrabold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-lg dark:bg-emerald-950/30">每月 20,000 元</span>
                 </div>
                 <div class="grid grid-cols-3 gap-2">
-                  <div class="col-span-2 flex items-center rounded-xl border border-slate-300 bg-white overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 shadow-2xs">
-                    <span id="curr-prefix-2" class="px-3 py-1.5 bg-slate-100 border-r border-slate-200 text-xs sm:text-sm font-bold text-slate-600 shrink-0">NT$</span>
+                  <div class="col-span-2 flex items-center rounded-xl border border-slate-300 bg-white overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 shadow-2xs dark:border-slate-600 dark:bg-slate-800">
+                    <span id="curr-prefix-2" class="px-3 py-1.5 bg-slate-100 border-r border-slate-200 text-xs sm:text-sm font-bold text-slate-600 shrink-0 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400">NT$</span>
                     <input type="number" id="input-contrib-amount" value="20000" step="1000" min="0" 
-                      class="w-full px-2 py-1.5 bg-transparent text-xs sm:text-sm font-bold text-slate-900 focus:outline-none">
+                      class="w-full px-2 py-1.5 bg-transparent text-xs sm:text-sm font-bold text-slate-900 focus:outline-none dark:text-slate-100">
                   </div>
-                  <select id="select-contrib-freq" class="bg-white border border-slate-300 text-slate-900 text-xs sm:text-sm font-semibold rounded-xl p-1.5">
+                  <select id="select-contrib-freq" class="bg-white border border-slate-300 text-slate-900 text-xs sm:text-sm font-semibold rounded-xl p-1.5 dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100">
                     <option value="monthly" selected>每月投入</option>
                     <option value="annual">每年投入</option>
                   </select>
@@ -405,33 +423,33 @@
               </div>
 
               <div>
-                <label class="text-xs sm:text-sm font-bold text-slate-800 block mb-1">定期定額隨薪資/通膨每年調升率 (%)</label>
-                <div class="flex items-center rounded-xl border border-slate-300 bg-white overflow-hidden focus-within:ring-2 focus-within:ring-blue-500">
+                <label class="text-xs sm:text-sm font-bold text-slate-800 block mb-1 dark:text-slate-200">定期定額隨薪資/通膨每年調升率 (%)</label>
+                <div class="flex items-center rounded-xl border border-slate-300 bg-white overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 dark:border-slate-600 dark:bg-slate-800">
                   <input type="number" id="input-contrib-growth" value="2.0" step="0.5" min="0" max="10" 
-                    class="w-full px-2 py-1.5 bg-transparent text-xs sm:text-sm font-bold text-slate-900 focus:outline-none">
-                  <span class="px-2.5 text-slate-500 font-bold text-xs">%</span>
+                    class="w-full px-2 py-1.5 bg-transparent text-xs sm:text-sm font-bold text-slate-900 focus:outline-none dark:text-slate-100">
+                  <span class="px-2.5 text-slate-500 font-bold text-xs dark:text-slate-400">%</span>
                 </div>
               </div>
             </div>
 
             <!-- 階段 2：退休提領期設定 -->
-            <div id="withdrawal-fields" class="p-3.5 bg-purple-50/70 rounded-2xl border border-purple-200 space-y-3">
-              <div class="flex items-center justify-between border-b border-purple-200 pb-2">
-                <span class="text-xs sm:text-sm font-black text-purple-900 flex items-center gap-1.5">
+            <div id="withdrawal-fields" class="p-3.5 bg-purple-50/70 rounded-2xl border border-purple-200 space-y-3 dark:bg-purple-950/25 dark:border-purple-800/50">
+              <div class="flex items-center justify-between border-b border-purple-200 pb-2 dark:border-purple-800/50">
+                <span class="text-xs sm:text-sm font-black text-purple-900 flex items-center gap-1.5 dark:text-purple-200">
                   <i data-lucide="coffee" class="w-4 h-4 text-purple-600"></i>
                   階段 2：退休提領期設定
                 </span>
-                <span id="withdrawal-period-text" class="text-xs text-purple-800 font-extrabold bg-white border border-purple-200 px-2.5 py-0.5 rounded-lg shadow-2xs">第 21 ~ 30 年</span>
+                <span id="withdrawal-period-text" class="text-xs text-purple-800 font-extrabold bg-white border border-purple-200 px-2.5 py-0.5 rounded-lg shadow-2xs dark:text-purple-300 dark:bg-slate-800 dark:border-purple-800/50">第 21 ~ 30 年</span>
               </div>
 
               <!-- 提領基準切換 (提領率 % vs 提領金額 $) -->
               <div>
-                <label class="text-xs sm:text-sm font-bold text-slate-800 block mb-1">提領計算基準</label>
-                <div class="grid grid-cols-2 gap-1.5 bg-slate-200/70 p-1 rounded-xl text-xs font-bold">
-                  <button type="button" id="btn-withdraw-basis-rate" class="py-1.5 px-2 rounded-lg bg-white text-purple-700 shadow-xs font-extrabold transition">
+                <label class="text-xs sm:text-sm font-bold text-slate-800 block mb-1 dark:text-slate-200">提領計算基準</label>
+                <div class="grid grid-cols-2 gap-1.5 bg-slate-200/70 p-1 rounded-xl text-xs font-bold dark:bg-slate-700/60">
+                  <button type="button" id="btn-withdraw-basis-rate" class="py-1.5 px-2 rounded-lg bg-white text-purple-700 shadow-xs font-extrabold transition dark:bg-slate-600 dark:text-purple-300 dark:bg-slate-800 dark:text-purple-400">
                     依比例提領 (提領率 %)
                   </button>
-                  <button type="button" id="btn-withdraw-basis-amount" class="py-1.5 px-2 rounded-lg text-slate-600 hover:text-slate-900 transition">
+                  <button type="button" id="btn-withdraw-basis-amount" class="py-1.5 px-2 rounded-lg text-slate-600 hover:text-slate-900 transition dark:text-slate-400 dark:hover:text-slate-100">
                     依固定金額 (每年/每月生活費)
                   </button>
                 </div>
@@ -441,38 +459,38 @@
               <div id="box-withdraw-rate" class="space-y-2">
                 <div>
                   <div class="flex items-center justify-between mb-1">
-                    <label class="text-xs sm:text-sm font-bold text-slate-800">初始提領率 (%)</label>
-                    <span id="withdrawal-rate-desc" class="text-xs font-extrabold text-purple-700">經典 4% 提領法則</span>
+                    <label class="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200">初始提領率 (%)</label>
+                    <span id="withdrawal-rate-desc" class="text-xs font-extrabold text-purple-700 dark:text-purple-400">經典 4% 提領法則</span>
                   </div>
-                  <div class="flex items-center rounded-xl border border-slate-300 bg-white overflow-hidden focus-within:ring-2 focus-within:ring-purple-500 shadow-2xs">
+                  <div class="flex items-center rounded-xl border border-slate-300 bg-white overflow-hidden focus-within:ring-2 focus-within:ring-purple-500 shadow-2xs dark:border-slate-600 dark:bg-slate-800">
                     <input type="number" id="input-withdrawal-rate" value="4.0" step="0.1" min="0.5" max="20" 
-                      class="w-full px-3 py-2 bg-transparent text-sm sm:text-base font-bold text-slate-900 focus:outline-none">
-                    <span class="px-3 text-slate-500 font-bold text-xs sm:text-sm">%</span>
+                      class="w-full px-3 py-2 bg-transparent text-sm sm:text-base font-bold text-slate-900 focus:outline-none dark:text-slate-100">
+                    <span class="px-3 text-slate-500 font-bold text-xs sm:text-sm dark:text-slate-400">%</span>
                   </div>
                 </div>
 
                 <!-- 快速提領率按鈕 -->
                 <div class="flex flex-wrap gap-1.5">
-                  <button type="button" class="btn-quick-withdraw-rate px-2.5 py-1 text-xs bg-white hover:bg-purple-100 text-purple-800 border border-purple-200 rounded-lg font-bold transition" data-val="3.0">3% (超保守)</button>
+                  <button type="button" class="btn-quick-withdraw-rate px-2.5 py-1 text-xs bg-white hover:bg-purple-100 text-purple-800 border border-purple-200 rounded-lg font-bold transition dark:bg-slate-800 dark:hover:bg-purple-900/40 dark:text-purple-300 dark:border-purple-800/50" data-val="3.0">3% (超保守)</button>
                   <button type="button" class="btn-quick-withdraw-rate px-2.5 py-1 text-xs bg-purple-600 text-white rounded-lg font-bold transition" data-val="3.5">3.5% (穩健)</button>
-                  <button type="button" class="btn-quick-withdraw-rate px-2.5 py-1 text-xs bg-white hover:bg-purple-100 text-purple-800 border border-purple-200 rounded-lg font-bold transition" data-val="4.0">4.0% (經典)</button>
-                  <button type="button" class="btn-quick-withdraw-rate px-2.5 py-1 text-xs bg-white hover:bg-purple-100 text-purple-800 border border-purple-200 rounded-lg font-bold transition" data-val="5.0">5.0% (積極)</button>
+                  <button type="button" class="btn-quick-withdraw-rate px-2.5 py-1 text-xs bg-white hover:bg-purple-100 text-purple-800 border border-purple-200 rounded-lg font-bold transition dark:bg-slate-800 dark:hover:bg-purple-900/40 dark:text-purple-300 dark:border-purple-800/50" data-val="4.0">4.0% (經典)</button>
+                  <button type="button" class="btn-quick-withdraw-rate px-2.5 py-1 text-xs bg-white hover:bg-purple-100 text-purple-800 border border-purple-200 rounded-lg font-bold transition dark:bg-slate-800 dark:hover:bg-purple-900/40 dark:text-purple-300 dark:border-purple-800/50" data-val="5.0">5.0% (積極)</button>
                 </div>
 
                 <!-- 即時提領金額換算卡片 (每月/每年提領多少錢) -->
-                <div id="withdrawal-rate-amount-box" class="bg-white/95 p-3 rounded-xl border border-purple-200 text-xs shadow-2xs space-y-1.5 mt-2">
-                  <div class="flex items-center justify-between font-bold text-purple-950">
+                <div id="withdrawal-rate-amount-box" class="bg-white/95 p-3 rounded-xl border border-purple-200 text-xs shadow-2xs space-y-1.5 mt-2 dark:bg-slate-900/90 dark:border-purple-800/50">
+                  <div class="flex items-center justify-between font-bold text-purple-950 dark:text-purple-200">
                     <span class="flex items-center gap-1.5">
                       <i data-lucide="calculator" class="w-4 h-4 text-purple-600"></i>
                       <span>提領率換算生活費：</span>
                     </span>
-                    <span id="withdraw-rate-annual-display" class="font-black text-purple-700 text-sm">每年約 NT$ -- 萬</span>
+                    <span id="withdraw-rate-annual-display" class="font-black text-purple-700 text-sm dark:text-purple-400">每年約 NT$ -- 萬</span>
                   </div>
-                  <div id="withdraw-rate-monthly-display" class="text-xs text-purple-900 flex items-center justify-between bg-purple-50/80 px-2.5 py-1 rounded-lg">
+                  <div id="withdraw-rate-monthly-display" class="text-xs text-purple-900 flex items-center justify-between bg-purple-50/80 px-2.5 py-1 rounded-lg dark:text-purple-200 dark:bg-purple-950/30">
                     <span>相當於每月生活費：</span>
-                    <span class="font-black text-purple-950">每月約 NT$ -- 元</span>
+                    <span class="font-black text-purple-950 dark:text-purple-200">每月約 NT$ -- 元</span>
                   </div>
-                  <div id="withdraw-rate-timing-note" class="text-[11px] text-slate-500 pt-1 border-t border-purple-100 leading-tight">
+                  <div id="withdraw-rate-timing-note" class="text-[11px] text-slate-500 pt-1 border-t border-purple-100 leading-tight dark:text-slate-400 dark:border-purple-800/40">
                     💡 正在依當前資產條件即時換算...
                   </div>
                 </div>
@@ -481,19 +499,19 @@
               <!-- B. 提領金額 (NT$) 輸入區 -->
               <div id="box-withdraw-amount" class="space-y-2 hidden">
                 <div class="flex items-center justify-between">
-                  <label class="text-xs sm:text-sm font-bold text-slate-800">退休後預計生活費金額</label>
-                  <span id="withdraw-amount-annual-display" class="text-xs font-extrabold text-purple-700 bg-white px-2 py-0.5 rounded-lg border border-purple-200">每年 60 萬元</span>
+                  <label class="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200">退休後預計生活費金額</label>
+                  <span id="withdraw-amount-annual-display" class="text-xs font-extrabold text-purple-700 bg-white px-2 py-0.5 rounded-lg border border-purple-200 dark:bg-slate-800 dark:border-purple-800/50 dark:text-purple-400">每年 60 萬元</span>
                 </div>
 
                 <div class="grid grid-cols-3 gap-2">
-                  <div class="col-span-2 flex items-center rounded-xl border border-slate-300 bg-white overflow-hidden focus-within:ring-2 focus-within:ring-purple-500 shadow-2xs">
-                    <span class="px-2.5 py-2 bg-slate-100 border-r border-slate-200 text-xs font-bold text-slate-600 shrink-0">NT$</span>
+                  <div class="col-span-2 flex items-center rounded-xl border border-slate-300 bg-white overflow-hidden focus-within:ring-2 focus-within:ring-purple-500 shadow-2xs dark:border-slate-600 dark:bg-slate-800">
+                    <span class="px-2.5 py-2 bg-slate-100 border-r border-slate-200 text-xs font-bold text-slate-600 shrink-0 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400">NT$</span>
                     <input type="number" id="input-withdrawal-custom-amount" value="50000" step="5000" min="0" 
-                      class="w-full px-2.5 py-2 bg-transparent text-sm sm:text-base font-bold text-slate-900 focus:outline-none">
+                      class="w-full px-2.5 py-2 bg-transparent text-sm sm:text-base font-bold text-slate-900 focus:outline-none dark:text-slate-100">
                   </div>
 
                   <div>
-                    <select id="select-withdrawal-amount-freq" class="w-full bg-white border border-slate-300 text-slate-900 text-xs sm:text-sm font-bold rounded-xl p-2.5 focus:ring-purple-500 shadow-2xs">
+                    <select id="select-withdrawal-amount-freq" class="w-full bg-white border border-slate-300 text-slate-900 text-xs sm:text-sm font-bold rounded-xl p-2.5 focus:ring-purple-500 shadow-2xs dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100">
                       <option value="monthly" selected>每月提領</option>
                       <option value="annual">每年提領</option>
                     </select>
@@ -502,17 +520,17 @@
 
                 <!-- 快速提領生活費按鈕 -->
                 <div class="flex flex-wrap gap-1.5">
-                  <button type="button" class="btn-quick-withdraw-amount px-2.5 py-1 text-xs bg-white hover:bg-purple-100 text-purple-800 border border-purple-200 rounded-lg font-bold transition" data-val="30000" data-freq="monthly">月領3萬</button>
+                  <button type="button" class="btn-quick-withdraw-amount px-2.5 py-1 text-xs bg-white hover:bg-purple-100 text-purple-800 border border-purple-200 rounded-lg font-bold transition dark:bg-slate-800 dark:hover:bg-purple-900/40 dark:text-purple-300 dark:border-purple-800/50" data-val="30000" data-freq="monthly">月領3萬</button>
                   <button type="button" class="btn-quick-withdraw-amount px-2.5 py-1 text-xs bg-purple-600 text-white rounded-lg font-bold transition" data-val="50000" data-freq="monthly">月領5萬</button>
-                  <button type="button" class="btn-quick-withdraw-amount px-2.5 py-1 text-xs bg-white hover:bg-purple-100 text-purple-800 border border-purple-200 rounded-lg font-bold transition" data-val="80000" data-freq="monthly">月領8萬</button>
-                  <button type="button" class="btn-quick-withdraw-amount px-2.5 py-1 text-xs bg-white hover:bg-purple-100 text-purple-800 border border-purple-200 rounded-lg font-bold transition" data-val="100000" data-freq="monthly">月領10萬</button>
+                  <button type="button" class="btn-quick-withdraw-amount px-2.5 py-1 text-xs bg-white hover:bg-purple-100 text-purple-800 border border-purple-200 rounded-lg font-bold transition dark:bg-slate-800 dark:hover:bg-purple-900/40 dark:text-purple-300 dark:border-purple-800/50" data-val="80000" data-freq="monthly">月領8萬</button>
+                  <button type="button" class="btn-quick-withdraw-amount px-2.5 py-1 text-xs bg-white hover:bg-purple-100 text-purple-800 border border-purple-200 rounded-lg font-bold transition dark:bg-slate-800 dark:hover:bg-purple-900/40 dark:text-purple-300 dark:border-purple-800/50" data-val="100000" data-freq="monthly">月領10萬</button>
                 </div>
               </div>
 
               <!-- 提領策略法則 -->
               <div>
-                <label class="text-xs sm:text-sm font-bold text-slate-800 block mb-1">提領法則策略</label>
-                <select id="select-withdrawal-type" class="w-full bg-white border border-slate-300 text-slate-900 text-xs sm:text-sm font-semibold rounded-xl p-2.5 focus:ring-purple-500">
+                <label class="text-xs sm:text-sm font-bold text-slate-800 block mb-1 dark:text-slate-200">提領法則策略</label>
+                <select id="select-withdrawal-type" class="w-full bg-white border border-slate-300 text-slate-900 text-xs sm:text-sm font-semibold rounded-xl p-2.5 focus:ring-purple-500 dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100">
                   <option value="fixed_amount" selected>固定實質金額 (依通膨逐年調整)</option>
                   <option value="fixed_percentage">固定淨值比例 (每年按當時總資產提領固定 %)</option>
                   <option value="guyton_klinger">Guyton-Klinger 動態護欄法則 (大跌減領、大漲加領)</option>
@@ -528,17 +546,17 @@
               <!-- 目標保留本金與通膨勾選 -->
               <div class="grid grid-cols-2 gap-2.5 pt-1">
                 <div>
-                  <label class="text-xs sm:text-sm font-bold text-slate-800 block mb-1">目標保留本金 (最低底線)</label>
-                  <div class="flex items-center rounded-xl border border-slate-300 bg-white overflow-hidden focus-within:ring-2 focus-within:ring-purple-500 shadow-2xs">
-                    <span id="curr-prefix-3" class="px-2 py-1.5 bg-slate-100 border-r border-slate-200 text-xs font-bold text-slate-600 shrink-0">NT$</span>
+                  <label class="text-xs sm:text-sm font-bold text-slate-800 block mb-1 dark:text-slate-200">目標保留本金 (最低底線)</label>
+                  <div class="flex items-center rounded-xl border border-slate-300 bg-white overflow-hidden focus-within:ring-2 focus-within:ring-purple-500 shadow-2xs dark:border-slate-600 dark:bg-slate-800">
+                    <span id="curr-prefix-3" class="px-2 py-1.5 bg-slate-100 border-r border-slate-200 text-xs font-bold text-slate-600 shrink-0 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400">NT$</span>
                     <input type="number" id="input-min-balance" value="0" step="500000" min="0" 
-                      class="w-full px-1.5 py-1.5 bg-transparent text-xs sm:text-sm font-bold text-slate-900 focus:outline-none">
+                      class="w-full px-1.5 py-1.5 bg-transparent text-xs sm:text-sm font-bold text-slate-900 focus:outline-none dark:text-slate-100">
                   </div>
                 </div>
 
                 <div class="flex items-center pt-5">
-                  <label class="flex items-center gap-2 text-xs sm:text-sm text-slate-800 font-bold cursor-pointer">
-                    <input type="checkbox" id="check-withdrawal-inflation" checked class="w-4 h-4 text-purple-600 rounded border-slate-300 focus:ring-purple-500 cursor-pointer">
+                  <label class="flex items-center gap-2 text-xs sm:text-sm text-slate-800 font-bold cursor-pointer dark:text-slate-200">
+                    <input type="checkbox" id="check-withdrawal-inflation" checked class="w-4 h-4 text-purple-600 rounded border-slate-300 focus:ring-purple-500 cursor-pointer dark:border-slate-600">
                     <span>每年提領隨通膨調升</span>
                   </label>
                 </div>
@@ -550,8 +568,8 @@
           <!-- ===== B. 進階多時期自訂排程模式 ===== -->
           <div id="advanced-cashflow-container" class="space-y-3 hidden">
             <div class="flex items-center justify-between">
-              <span class="text-xs text-slate-600 font-medium">多時期自訂排程：</span>
-              <button type="button" id="btn-load-tw-stage-preset" class="text-xs text-blue-600 hover:text-blue-800 font-bold underline">
+              <span class="text-xs text-slate-600 font-medium dark:text-slate-400">多時期自訂排程：</span>
+              <button type="button" id="btn-load-tw-stage-preset" class="text-xs text-blue-600 hover:text-blue-800 font-bold underline dark:hover:text-blue-300">
                 套用經典三階段範本
               </button>
             </div>
@@ -560,16 +578,16 @@
               <!-- 動態注入多時期卡片 -->
             </div>
 
-            <div class="grid grid-cols-3 gap-2 pt-1.5 border-t border-slate-100">
-              <button type="button" id="btn-add-stage-contrib" class="py-2 px-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-xl text-xs font-bold flex items-center justify-center gap-1 border border-emerald-200 transition">
+            <div class="grid grid-cols-3 gap-2 pt-1.5 border-t border-slate-100 dark:border-slate-700/60">
+              <button type="button" id="btn-add-stage-contrib" class="py-2 px-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-xl text-xs font-bold flex items-center justify-center gap-1 border border-emerald-200 transition dark:bg-emerald-950/30 dark:hover:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-800/50">
                 <i data-lucide="plus" class="w-3.5 h-3.5"></i>
                 + 定期定額
               </button>
-              <button type="button" id="btn-add-stage-lumpin" class="py-2 px-2 bg-blue-50 hover:bg-blue-100 text-blue-800 rounded-xl text-xs font-bold flex items-center justify-center gap-1 border border-blue-200 transition">
+              <button type="button" id="btn-add-stage-lumpin" class="py-2 px-2 bg-blue-50 hover:bg-blue-100 text-blue-800 rounded-xl text-xs font-bold flex items-center justify-center gap-1 border border-blue-200 transition dark:bg-blue-950/30 dark:hover:bg-blue-900/40 dark:text-blue-300 dark:border-blue-800/50">
                 <i data-lucide="plus" class="w-3.5 h-3.5"></i>
                 + 單筆投入
               </button>
-              <button type="button" id="btn-add-stage-withdraw" class="py-2 px-2 bg-purple-50 hover:bg-purple-100 text-purple-800 rounded-xl text-xs font-bold flex items-center justify-center gap-1 border border-purple-200 transition">
+              <button type="button" id="btn-add-stage-withdraw" class="py-2 px-2 bg-purple-50 hover:bg-purple-100 text-purple-800 rounded-xl text-xs font-bold flex items-center justify-center gap-1 border border-purple-200 transition dark:bg-purple-950/30 dark:hover:bg-purple-900/40 dark:text-purple-300 dark:border-purple-800/50">
                 <i data-lucide="plus" class="w-3.5 h-3.5"></i>
                 + 退休提領
               </button>
@@ -579,13 +597,13 @@
         </div>
 
         <!-- 4. 資產配置與權重設定 -->
-        <div class="glass-card rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200 space-y-4">
-          <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
-            <h2 class="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2">
+        <div class="glass-card rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200 space-y-4 dark:border-slate-700">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-2.5 dark:border-slate-700/60">
+            <h2 class="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2 dark:text-slate-100">
               <i data-lucide="pie-chart" class="w-4 h-4 text-purple-600"></i>
               資產配置與權重比例 (Asset Allocation)
             </h2>
-            <select id="select-rebalance" class="bg-slate-100 border border-slate-200 text-slate-800 text-xs rounded-xl px-2.5 py-1 font-bold">
+            <select id="select-rebalance" class="bg-slate-100 border border-slate-200 text-slate-800 text-xs rounded-xl px-2.5 py-1 font-bold dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200">
               <option value="annual" selected>每年再平衡</option>
               <option value="never">從不再平衡</option>
             </select>
@@ -595,13 +613,13 @@
             <!-- 動態插入資產項目 -->
           </div>
 
-          <div class="pt-2.5 border-t border-slate-100 flex items-center justify-between">
-            <button type="button" id="btn-add-asset" class="flex items-center gap-1.5 text-xs sm:text-sm font-bold text-blue-600 hover:text-blue-800 transition">
+          <div class="pt-2.5 border-t border-slate-100 flex items-center justify-between dark:border-slate-700/60">
+            <button type="button" id="btn-add-asset" class="flex items-center gap-1.5 text-xs sm:text-sm font-bold text-blue-600 hover:text-blue-800 transition dark:hover:text-blue-300">
               <i data-lucide="plus-circle" class="w-4 h-4"></i>
               新增資產
             </button>
             <div class="flex items-center gap-2.5">
-              <button type="button" id="btn-auto-balance" class="text-xs text-slate-500 hover:text-slate-800 underline font-semibold">等比例配平至 100%</button>
+              <button type="button" id="btn-auto-balance" class="text-xs text-slate-500 hover:text-slate-800 underline font-semibold dark:text-slate-400 dark:hover:text-slate-200">等比例配平至 100%</button>
               <div id="weight-total-badge" class="px-3 py-1 text-xs font-extrabold rounded-xl weight-badge-valid">
                 總權重: 100%
               </div>
@@ -615,7 +633,7 @@
             <i data-lucide="play" id="btn-run-icon" class="w-5 h-5 fill-white"></i>
             <span id="btn-run-text">立即執行蒙地卡羅模擬 (重新抽樣)</span>
           </button>
-          <p class="text-xs text-slate-500 text-center font-medium mt-2 flex items-center justify-center gap-1 leading-relaxed">
+          <p class="text-xs text-slate-500 text-center font-medium mt-2 flex items-center justify-center gap-1 leading-relaxed dark:text-slate-400">
             <i data-lucide="info" class="w-3.5 h-3.5 text-blue-500 shrink-0"></i>
             <span>更動參數會自動試算；點擊按鈕可重新抽取 <strong>2,000 組</strong> 隨機市場情境</span>
           </p>
@@ -627,15 +645,15 @@
       <div id="section-results" class="lg:col-span-7 xl:col-span-8 space-y-4 scroll-mt-20">
         
         <!-- 運算狀態列 (提供明確執行反饋) -->
-        <div class="bg-white/90 glass-card rounded-2xl px-4 py-2.5 border border-slate-200 flex flex-wrap items-center justify-between gap-2">
-          <div class="flex items-center gap-2 text-xs sm:text-sm font-bold text-slate-800">
+        <div class="bg-white/90 glass-card rounded-2xl px-4 py-2.5 border border-slate-200 flex flex-wrap items-center justify-between gap-2 dark:bg-slate-800/90 dark:border-slate-700">
+          <div class="flex items-center gap-2 text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200">
             <span class="relative flex h-2.5 w-2.5">
               <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
               <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
             </span>
             <span>模擬結果總覽</span>
           </div>
-          <div id="sim-status-badge" class="text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-xl flex items-center gap-1.5 transition-all">
+          <div id="sim-status-badge" class="text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-xl flex items-center gap-1.5 transition-all dark:text-emerald-300 dark:bg-emerald-950/30 dark:border-emerald-800/50">
             <i data-lucide="sparkles" class="w-3.5 h-3.5 text-emerald-600"></i>
             <span id="sim-status-text">已完成 2,000 次隨機路徑模擬</span>
           </div>
@@ -645,55 +663,55 @@
         <div id="kpi-cards-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
           
           <!-- 中位數預期終值 -->
-          <div class="glass-card rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200">
-            <div class="flex items-center justify-between text-slate-500 text-xs sm:text-sm mb-1 font-bold">
+          <div class="glass-card rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200 dark:border-slate-700">
+            <div class="flex items-center justify-between text-slate-500 text-xs sm:text-sm mb-1 font-bold dark:text-slate-400">
               <span>中位數終值 (50%)</span>
               <i data-lucide="trending-up" class="w-4 h-4 text-blue-500"></i>
             </div>
             <div id="kpi-p50" class="text-xl sm:text-2xl font-black text-blue-600">--</div>
-            <div id="kpi-p50-sub" class="text-xs text-slate-500 mt-0.5 font-semibold">實質購買力</div>
+            <div id="kpi-p50-sub" class="text-xs text-slate-500 mt-0.5 font-semibold dark:text-slate-400">實質購買力</div>
           </div>
 
           <!-- 目標存活 / 成功率 -->
-          <div class="glass-card rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200">
-            <div class="flex items-center justify-between text-slate-500 text-xs sm:text-sm mb-1 font-bold">
+          <div class="glass-card rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200 dark:border-slate-700">
+            <div class="flex items-center justify-between text-slate-500 text-xs sm:text-sm mb-1 font-bold dark:text-slate-400">
               <span>投資組合存活率</span>
               <i data-lucide="shield-check" class="w-4 h-4 text-emerald-500"></i>
             </div>
             <div id="kpi-success-rate" class="text-xl sm:text-2xl font-black text-emerald-600">--</div>
-            <div id="kpi-ruin-text" class="text-xs text-slate-500 mt-0.5 font-semibold">破產風險: 0%</div>
+            <div id="kpi-ruin-text" class="text-xs text-slate-500 mt-0.5 font-semibold dark:text-slate-400">破產風險: 0%</div>
           </div>
 
           <!-- 最悲觀市場考驗 (10th) -->
-          <div class="glass-card rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200">
-            <div class="flex items-center justify-between text-slate-500 text-xs sm:text-sm mb-1 font-bold">
+          <div class="glass-card rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200 dark:border-slate-700">
+            <div class="flex items-center justify-between text-slate-500 text-xs sm:text-sm mb-1 font-bold dark:text-slate-400">
               <span>最悲觀情況 (10%)</span>
               <i data-lucide="cloud-rain" class="w-4 h-4 text-amber-500"></i>
             </div>
             <div id="kpi-p10" class="text-xl sm:text-2xl font-black text-amber-600">--</div>
-            <div class="text-xs text-slate-500 mt-0.5 font-semibold">極端逆風下水準</div>
+            <div class="text-xs text-slate-500 mt-0.5 font-semibold dark:text-slate-400">極端逆風下水準</div>
           </div>
 
           <!-- 中位數最大回撤 (Max Drawdown) -->
-          <div class="glass-card rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200">
-            <div class="flex items-center justify-between text-slate-500 text-xs sm:text-sm mb-1 font-bold">
+          <div class="glass-card rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200 dark:border-slate-700">
+            <div class="flex items-center justify-between text-slate-500 text-xs sm:text-sm mb-1 font-bold dark:text-slate-400">
               <span>中位數最大回撤</span>
               <i data-lucide="arrow-down-right" class="w-4 h-4 text-rose-500"></i>
             </div>
             <div id="kpi-drawdown" class="text-xl sm:text-2xl font-black text-rose-600">--</div>
-            <div id="kpi-worst-dd" class="text-xs text-slate-500 mt-0.5 font-semibold">最差回撤: --</div>
+            <div id="kpi-worst-dd" class="text-xs text-slate-500 mt-0.5 font-semibold dark:text-slate-400">最差回撤: --</div>
           </div>
 
         </div>
 
         <!-- Portfolio Model (資產配置模型總覽：配置清單 + 儲存組合 + 圓環分佈圖) -->
-        <div class="glass-card rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200 space-y-3">
-          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
-            <h2 class="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2">
+        <div class="glass-card rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200 space-y-3 dark:border-slate-700">
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2.5 dark:border-slate-700/60">
+            <h2 class="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2 dark:text-slate-100">
               <i data-lucide="pie-chart" class="w-4 h-4 text-indigo-600"></i>
               資產配置模型 (Portfolio Model)
             </h2>
-            <button type="button" id="btn-save-portfolio" class="flex items-center gap-1 px-3 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl text-xs sm:text-sm font-bold border border-blue-200 transition shadow-2xs">
+            <button type="button" id="btn-save-portfolio" class="flex items-center gap-1 px-3 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl text-xs sm:text-sm font-bold border border-blue-200 transition shadow-2xs dark:bg-blue-950/30 dark:hover:bg-blue-900/40 dark:border-blue-800/50 dark:text-blue-400">
               <i data-lucide="save" class="w-3.5 h-3.5"></i>
               儲存自訂組合 (Save Portfolio)
             </button>
@@ -702,14 +720,14 @@
           <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
             <!-- 左側：資產配置權重清單 -->
             <div class="md:col-span-7 overflow-x-auto">
-              <table class="w-full text-xs sm:text-sm text-left text-slate-700">
-                <thead class="text-xs text-slate-500 uppercase bg-slate-50/80 border-b border-slate-200 font-extrabold">
+              <table class="w-full text-xs sm:text-sm text-left text-slate-700 dark:text-slate-300">
+                <thead class="text-xs text-slate-500 uppercase bg-slate-50/80 border-b border-slate-200 font-extrabold dark:text-slate-400 dark:bg-slate-800/60 dark:border-slate-700">
                   <tr>
                     <th class="py-2 px-3">資產類別 (Asset Class)</th>
                     <th class="py-2 px-3 text-right">配置比例 (Allocation)</th>
                   </tr>
                 </thead>
-                <tbody id="portfolio-model-table-body" class="divide-y divide-slate-100 font-bold">
+                <tbody id="portfolio-model-table-body" class="divide-y divide-slate-100 font-bold dark:divide-slate-700/60">
                   <!-- 動態注入資產與百分比 -->
                 </tbody>
               </table>
@@ -725,27 +743,27 @@
         </div>
 
         <!-- B. 圖表與資料切換 Tab -->
-        <div class="glass-card rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="glass-card rounded-2xl shadow-sm border border-slate-200 overflow-hidden dark:border-slate-700">
           
           <!-- Tab 按鈕列 (手機可左右平滑滑動切換) -->
-          <div class="flex border-b border-slate-200 bg-slate-50/90 px-2.5 sm:px-3 pt-2 sm:pt-2.5 gap-1 sm:gap-1.5 text-xs sm:text-sm font-bold overflow-x-auto touch-scroll-x no-scrollbar no-print">
+          <div class="flex border-b border-slate-200 bg-slate-50/90 px-2.5 sm:px-3 pt-2 sm:pt-2.5 gap-1 sm:gap-1.5 text-xs sm:text-sm font-bold overflow-x-auto touch-scroll-x no-scrollbar no-print dark:border-slate-700 dark:bg-slate-800/80">
             <button type="button" class="tab-btn py-2 px-2.5 sm:py-2.5 sm:px-3 border-b-2 border-blue-600 text-blue-600 flex items-center gap-1.5 whitespace-nowrap shrink-0" data-tab="tab-trajectories">
               <i data-lucide="line-chart" class="w-4 h-4"></i>
               資產累積走勢圖
             </button>
-            <button type="button" class="tab-btn py-2.5 px-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-1.5 whitespace-nowrap shrink-0" data-tab="tab-survival">
+            <button type="button" class="tab-btn py-2.5 px-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-1.5 whitespace-nowrap shrink-0 dark:text-slate-400 dark:hover:text-slate-200" data-tab="tab-survival">
               <i data-lucide="shield-alert" class="w-4 h-4"></i>
               存活率逐年曲線
             </button>
-            <button type="button" class="tab-btn py-2.5 px-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-1.5 whitespace-nowrap shrink-0" data-tab="tab-performance">
+            <button type="button" class="tab-btn py-2.5 px-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-1.5 whitespace-nowrap shrink-0 dark:text-slate-400 dark:hover:text-slate-200" data-tab="tab-performance">
               <i data-lucide="activity" class="w-4 h-4"></i>
               量化績效總表
             </button>
-            <button type="button" class="tab-btn py-2.5 px-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-1.5 whitespace-nowrap shrink-0" data-tab="tab-histogram">
+            <button type="button" class="tab-btn py-2.5 px-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-1.5 whitespace-nowrap shrink-0 dark:text-slate-400 dark:hover:text-slate-200" data-tab="tab-histogram">
               <i data-lucide="bar-chart-3" class="w-4 h-4"></i>
               終值分佈直方圖
             </button>
-            <button type="button" class="tab-btn py-2.5 px-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-1.5 whitespace-nowrap shrink-0" data-tab="tab-table">
+            <button type="button" class="tab-btn py-2.5 px-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-1.5 whitespace-nowrap shrink-0 dark:text-slate-400 dark:hover:text-slate-200" data-tab="tab-table">
               <i data-lucide="table-2" class="w-4 h-4"></i>
               逐年現金證明細
             </button>
@@ -755,19 +773,19 @@
           <div id="panel-tab-trajectories" class="p-4 sm:p-6 space-y-4">
             <div class="flex flex-wrap items-center justify-between gap-2.5">
               <div>
-                <h3 class="text-sm sm:text-base font-black text-slate-900 flex items-center gap-2">
+                <h3 class="text-sm sm:text-base font-black text-slate-900 flex items-center gap-2 dark:text-slate-100">
                   <span id="chart-title-mode" class="text-blue-600">[實質購買力]</span>
                   投資組合累積資產走勢 (Simulated Portfolio Balances)
                 </h3>
-                <p class="text-xs sm:text-sm text-slate-500 font-medium">包含 10th (悲觀)、25th、50th (中位數)、75th、90th (樂觀) 百分位數軌跡</p>
+                <p class="text-xs sm:text-sm text-slate-500 font-medium dark:text-slate-400">包含 10th (悲觀)、25th、50th (中位數)、75th、90th (樂觀) 百分位數軌跡</p>
               </div>
 
               <!-- 顯示隨機路徑開關 -->
-              <div class="flex items-center gap-1.5 no-print bg-slate-50 px-2.5 py-1 rounded-xl border border-slate-200">
-                <input type="checkbox" id="check-show-paths" checked class="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 cursor-pointer">
-                <label for="check-show-paths" class="text-xs sm:text-sm text-slate-700 font-bold cursor-pointer flex items-center gap-1" title="在平滑的百分位數扇形區間外，額外畫出 30 條真實模擬路徑的上下起伏細線，觀察真實市場波動感">
+              <div class="flex items-center gap-1.5 no-print bg-slate-50 px-2.5 py-1 rounded-xl border border-slate-200 dark:bg-slate-900 dark:border-slate-700">
+                <input type="checkbox" id="check-show-paths" checked class="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 cursor-pointer dark:border-slate-600">
+                <label for="check-show-paths" class="text-xs sm:text-sm text-slate-700 font-bold cursor-pointer flex items-center gap-1 dark:text-slate-300" title="在平滑的百分位數扇形區間外，額外畫出 30 條真實模擬路徑的上下起伏細線，觀察真實市場波動感">
                   <span>抽樣路徑 (30條)</span>
-                  <i data-lucide="help-circle" class="w-3.5 h-3.5 text-slate-400 hover:text-blue-600"></i>
+                  <i data-lucide="help-circle" class="w-3.5 h-3.5 text-slate-400 hover:text-blue-600 dark:text-slate-500"></i>
                 </label>
               </div>
             </div>
@@ -783,12 +801,12 @@
             </div>
 
             <!-- 圖例說明 -->
-            <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs pt-2 border-t border-slate-100 text-center font-bold">
-              <div class="p-1.5 rounded-xl bg-emerald-50 text-emerald-800">90th 樂觀繁榮 (頂端 10%)</div>
-              <div class="p-1.5 rounded-xl bg-blue-50 text-blue-800">75th 良好行情</div>
-              <div class="p-1.5 rounded-xl bg-indigo-100 text-indigo-900">50th 中位數 (最可能)</div>
-              <div class="p-1.5 rounded-xl bg-amber-50 text-amber-800">25th 疲弱行情</div>
-              <div class="p-1.5 rounded-xl bg-rose-50 text-rose-800">10th 悲觀逆風 (底端 10%)</div>
+            <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs pt-2 border-t border-slate-100 text-center font-bold dark:border-slate-700/60">
+              <div class="p-1.5 rounded-xl bg-emerald-50 text-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-300">90th 樂觀繁榮 (頂端 10%)</div>
+              <div class="p-1.5 rounded-xl bg-blue-50 text-blue-800 dark:bg-blue-950/30 dark:text-blue-300">75th 良好行情</div>
+              <div class="p-1.5 rounded-xl bg-indigo-100 text-indigo-900 dark:bg-indigo-900/40 dark:text-indigo-200">50th 中位數 (最可能)</div>
+              <div class="p-1.5 rounded-xl bg-amber-50 text-amber-800 dark:bg-amber-950/30 dark:text-amber-300">25th 疲弱行情</div>
+              <div class="p-1.5 rounded-xl bg-rose-50 text-rose-800 dark:bg-rose-950/30 dark:text-rose-300">10th 悲觀逆風 (底端 10%)</div>
             </div>
           </div>
 
@@ -796,21 +814,21 @@
           <div id="panel-tab-survival" class="p-4 sm:p-6 space-y-4 hidden">
             <div class="flex flex-wrap items-center justify-between gap-2.5">
               <div>
-                <h3 class="text-sm sm:text-base font-black text-slate-900 flex items-center gap-2">
+                <h3 class="text-sm sm:text-base font-black text-slate-900 flex items-center gap-2 dark:text-slate-100">
                   投資組合逐年存活率 (Portfolio Survival over Time)
                 </h3>
-                <p class="text-xs sm:text-sm text-slate-500 font-medium">展現由第 1 年至第 N 年期間，資產尚未提早耗盡破產的百分比機率</p>
+                <p class="text-xs sm:text-sm text-slate-500 font-medium dark:text-slate-400">展現由第 1 年至第 N 年期間，資產尚未提早耗盡破產的百分比機率</p>
               </div>
-              <div class="text-xs sm:text-sm font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-xl">
+              <div class="text-xs sm:text-sm font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-xl dark:bg-emerald-950/30 dark:border-emerald-800/50 dark:text-emerald-400">
                 最終存活率: <span id="survival-final-rate">--%</span>
               </div>
             </div>
 
             <!-- Tab 2 白話解說卡 -->
-            <div class="p-2.5 rounded-xl border bg-emerald-50/80 border-emerald-200 text-xs text-emerald-950 leading-relaxed flex items-start gap-2">
+            <div class="p-2.5 rounded-xl border bg-emerald-50/80 border-emerald-200 text-xs text-emerald-950 leading-relaxed flex items-start gap-2 dark:bg-emerald-950/30 dark:border-emerald-800/50 dark:text-emerald-200">
               <span class="text-base shrink-0">🛡️</span>
               <div>
-                <div class="font-bold text-emerald-900 mb-0.5">【存活率逐年曲線】白話解說：</div>
+                <div class="font-bold text-emerald-900 mb-0.5 dark:text-emerald-200">【存活率逐年曲線】白話解說：</div>
                 代表在 2,000 次模擬中，<strong>「每一年結束時錢還沒花光 (本金 > 0)」的成功機率</strong>。例如第 25 年為 95%，代表有 95% 的機率您的資產足夠支應退休生活，僅 5% 機率遭遇極端股災提早耗盡。
               </div>
             </div>
@@ -824,34 +842,34 @@
           <div id="panel-tab-performance" class="p-4 sm:p-6 space-y-4 hidden">
             <div class="flex flex-wrap items-center justify-between gap-2.5">
               <div>
-                <h3 class="text-sm sm:text-base font-black text-slate-900">量化績效統計總表 (Performance Summary)</h3>
-                <p class="text-xs sm:text-sm text-slate-500 font-medium">精確呈現各百分位數下的年化報酬率、實質購買力、波動度、夏普值、回撤與安全提領率</p>
+                <h3 class="text-sm sm:text-base font-black text-slate-900 dark:text-slate-100">量化績效統計總表 (Performance Summary)</h3>
+                <p class="text-xs sm:text-sm text-slate-500 font-medium dark:text-slate-400">精確呈現各百分位數下的年化報酬率、實質購買力、波動度、夏普值、回撤與安全提領率</p>
               </div>
-              <button id="btn-perf-download-csv" class="text-xs sm:text-sm font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 no-print">
+              <button id="btn-perf-download-csv" class="text-xs sm:text-sm font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 no-print dark:hover:text-blue-300">
                 <i data-lucide="download" class="w-4 h-4"></i> 下載績效總表 (CSV)
               </button>
             </div>
 
-            <div class="overflow-x-auto border border-slate-200 rounded-2xl">
-              <table class="w-full text-xs sm:text-sm text-left text-slate-700">
-                <thead class="text-xs text-slate-800 uppercase bg-slate-100 border-b border-slate-200 font-black">
+            <div class="overflow-x-auto border border-slate-200 rounded-2xl dark:border-slate-700">
+              <table class="w-full text-xs sm:text-sm text-left text-slate-700 dark:text-slate-300">
+                <thead class="text-xs text-slate-800 uppercase bg-slate-100 border-b border-slate-200 font-black dark:text-slate-200 dark:bg-slate-800 dark:border-slate-700">
                   <tr>
                     <th class="py-2.5 px-3.5 w-1/3">指標項目 (Metric)</th>
-                    <th class="py-2.5 px-3 text-rose-700 font-bold">10th</th>
-                    <th class="py-2.5 px-3 text-amber-700 font-bold">25th</th>
-                    <th class="py-2.5 px-3 text-indigo-700 font-black">50th (中位數)</th>
-                    <th class="py-2.5 px-3 text-blue-700 font-bold">75th</th>
-                    <th class="py-2.5 px-3 text-emerald-700 font-bold">90th</th>
+                    <th class="py-2.5 px-3 text-rose-700 font-bold dark:text-rose-400">10th</th>
+                    <th class="py-2.5 px-3 text-amber-700 font-bold dark:text-amber-400">25th</th>
+                    <th class="py-2.5 px-3 text-indigo-700 font-black dark:text-indigo-400">50th (中位數)</th>
+                    <th class="py-2.5 px-3 text-blue-700 font-bold dark:text-blue-400">75th</th>
+                    <th class="py-2.5 px-3 text-emerald-700 font-bold dark:text-emerald-400">90th</th>
                   </tr>
                 </thead>
-                <tbody id="performance-summary-body" class="divide-y divide-slate-200 bg-white font-semibold">
+                <tbody id="performance-summary-body" class="divide-y divide-slate-200 bg-white font-semibold dark:divide-slate-700 dark:bg-slate-800">
                   <!-- 動態注入 Performance Summary 12 項指標 -->
                 </tbody>
               </table>
             </div>
 
             <!-- 底部存活率總結提示 -->
-            <div id="performance-footer-note" class="p-3 bg-slate-100 rounded-xl text-xs sm:text-sm font-bold text-slate-700 border border-slate-200">
+            <div id="performance-footer-note" class="p-3 bg-slate-100 rounded-xl text-xs sm:text-sm font-bold text-slate-700 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">
               <!-- 動態注入 -->
             </div>
           </div>
@@ -860,16 +878,16 @@
           <div id="panel-tab-histogram" class="p-4 sm:p-6 space-y-4 hidden">
             <div class="flex items-center justify-between">
               <div>
-                <h3 class="text-sm sm:text-base font-black text-slate-900">模擬結束時的資產累積區間機率分佈</h3>
-                <p class="text-xs sm:text-sm text-slate-500 font-medium">橫軸為資產終值區間，縱軸為落入該區間之模擬次數頻率</p>
+                <h3 class="text-sm sm:text-base font-black text-slate-900 dark:text-slate-100">模擬結束時的資產累積區間機率分佈</h3>
+                <p class="text-xs sm:text-sm text-slate-500 font-medium dark:text-slate-400">橫軸為資產終值區間，縱軸為落入該區間之模擬次數頻率</p>
               </div>
             </div>
 
             <!-- Tab 4 白話解說卡 -->
-            <div class="p-2.5 rounded-xl border bg-blue-50/80 border-blue-200 text-xs text-blue-950 leading-relaxed flex items-start gap-2">
+            <div class="p-2.5 rounded-xl border bg-blue-50/80 border-blue-200 text-xs text-blue-950 leading-relaxed flex items-start gap-2 dark:bg-blue-950/30 dark:border-blue-800/50 dark:text-blue-200">
               <span class="text-base shrink-0">📊</span>
               <div>
-                <div class="font-bold text-blue-900 mb-0.5">【終值分佈直方圖】白話解說：</div>
+                <div class="font-bold text-blue-900 mb-0.5 dark:text-blue-200">【終值分佈直方圖】白話解說：</div>
                 統計在模擬最後一年（如第 30 年），2,000 位模擬投資人的<strong>最終財富金額落在各個區間的次數分佈</strong>。柱子越高代表最終財富落在該金額區間的機率越大。
               </div>
             </div>
@@ -883,28 +901,28 @@
           <div id="panel-tab-table" class="p-4 sm:p-6 space-y-4 hidden">
             <div class="flex flex-wrap items-center justify-between gap-2.5">
               <div>
-                <h3 class="text-sm sm:text-base font-black text-slate-900">逐年資產淨值與現金證明細</h3>
-                <p class="text-xs sm:text-sm text-slate-500 font-medium">所有數值均同步呈現「實質購買力」與「名目金額」供精確對比</p>
+                <h3 class="text-sm sm:text-base font-black text-slate-900 dark:text-slate-100">逐年資產淨值與現金證明細</h3>
+                <p class="text-xs sm:text-sm text-slate-500 font-medium dark:text-slate-400">所有數值均同步呈現「實質購買力」與「名目金額」供精確對比</p>
               </div>
-              <button id="btn-table-download-csv" class="text-xs sm:text-sm font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 no-print">
+              <button id="btn-table-download-csv" class="text-xs sm:text-sm font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 no-print dark:hover:text-blue-300">
                 <i data-lucide="download" class="w-4 h-4"></i> 下載此表 (CSV)
               </button>
             </div>
 
-            <div class="overflow-x-auto border border-slate-200 rounded-2xl max-h-[460px]">
-              <table class="w-full text-xs sm:text-sm text-left text-slate-700">
-                <thead class="text-xs text-slate-800 uppercase bg-slate-100 sticky top-0 border-b border-slate-200 font-black">
+            <div class="overflow-x-auto border border-slate-200 rounded-2xl max-h-[460px] dark:border-slate-700">
+              <table class="w-full text-xs sm:text-sm text-left text-slate-700 dark:text-slate-300">
+                <thead class="text-xs text-slate-800 uppercase bg-slate-100 sticky top-0 border-b border-slate-200 font-black dark:text-slate-200 dark:bg-slate-800 dark:border-slate-700">
                   <tr>
                     <th class="py-2.5 px-3">年份</th>
-                    <th class="py-2.5 px-3 font-black text-blue-700">實質中位數資產</th>
-                    <th class="py-2.5 px-3 text-emerald-700 font-bold">實質 90% 樂觀</th>
-                    <th class="py-2.5 px-3 text-rose-700 font-bold">實質 10% 悲觀</th>
+                    <th class="py-2.5 px-3 font-black text-blue-700 dark:text-blue-400">實質中位數資產</th>
+                    <th class="py-2.5 px-3 text-emerald-700 font-bold dark:text-emerald-400">實質 90% 樂觀</th>
+                    <th class="py-2.5 px-3 text-rose-700 font-bold dark:text-rose-400">實質 10% 悲觀</th>
                     <th class="py-2.5 px-3 font-bold">當年實質淨現金流</th>
-                    <th class="py-2.5 px-3 font-bold text-slate-900">名目中位數資產</th>
-                    <th class="py-2.5 px-3 text-slate-600 font-bold">名目淨現金流</th>
+                    <th class="py-2.5 px-3 font-bold text-slate-900 dark:text-slate-100">名目中位數資產</th>
+                    <th class="py-2.5 px-3 text-slate-600 font-bold dark:text-slate-400">名目淨現金流</th>
                   </tr>
                 </thead>
-                <tbody id="yearly-table-body" class="divide-y divide-slate-200 bg-white font-medium">
+                <tbody id="yearly-table-body" class="divide-y divide-slate-200 bg-white font-medium dark:divide-slate-700 dark:bg-slate-800">
                   <!-- 動態注入表格內容 -->
                 </tbody>
               </table>
@@ -914,12 +932,12 @@
         </div>
 
         <!-- 投資與 FIRE 規劃建議解讀卡片 -->
-        <div class="glass-card rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200 space-y-3">
-          <h3 class="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
+        <div class="glass-card rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200 space-y-3 dark:border-slate-700">
+          <h3 class="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-wider flex items-center gap-2 dark:text-slate-100">
             <i data-lucide="lightbulb" class="w-4 h-4 text-amber-500"></i>
             蒙地卡羅模擬專業解讀與建議
           </h3>
-          <div id="simulation-insights" class="text-xs sm:text-sm text-slate-700 leading-relaxed space-y-2.5 font-medium">
+          <div id="simulation-insights" class="text-xs sm:text-sm text-slate-700 leading-relaxed space-y-2.5 font-medium dark:text-slate-300">
             <!-- 動態注入評語 -->
           </div>
         </div>
@@ -932,11 +950,11 @@
   <!-- 手機版專屬底部浮動快捷導航 Bar (行動裝置寬度 < 1024px 自動啟動) -->
   <div class="lg:hidden mobile-bottom-bar px-3 py-2 no-print">
     <div class="max-w-lg mx-auto grid grid-cols-3 gap-2 text-center">
-      <button type="button" id="btn-mobile-scroll-params" class="flex flex-col items-center justify-center py-1.5 px-1 bg-slate-100 active:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold transition">
+      <button type="button" id="btn-mobile-scroll-params" class="flex flex-col items-center justify-center py-1.5 px-1 bg-slate-100 active:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold transition dark:bg-slate-800 dark:active:bg-slate-600 dark:text-slate-200">
         <i data-lucide="sliders" class="w-4 h-4 text-blue-600 mb-0.5"></i>
         <span>⚙️ 參數設定</span>
       </button>
-      <button type="button" id="btn-mobile-scroll-results" class="flex flex-col items-center justify-center py-1.5 px-1 bg-slate-100 active:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold transition">
+      <button type="button" id="btn-mobile-scroll-results" class="flex flex-col items-center justify-center py-1.5 px-1 bg-slate-100 active:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold transition dark:bg-slate-800 dark:active:bg-slate-600 dark:text-slate-200">
         <i data-lucide="line-chart" class="w-4 h-4 text-emerald-600 mb-0.5"></i>
         <span>📊 分析結果</span>
       </button>
@@ -948,10 +966,10 @@
   </div>
 
   <!-- 頁尾 -->
-  <footer class="mt-10 py-6 border-t border-slate-200 bg-white text-center text-xs sm:text-sm text-slate-500 no-print">
+  <footer class="mt-10 py-6 border-t border-slate-200 bg-white text-center text-xs sm:text-sm text-slate-500 no-print dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
     <div class="max-w-[1700px] w-full mx-auto px-4">
-      <p class="font-bold text-slate-800 mb-1 text-sm sm:text-base">台灣投資組合蒙地卡羅模擬器 (Taiwan Portfolio Visualizer Monte Carlo Simulator)</p>
-      <p class="text-xs text-slate-400">
+      <p class="font-bold text-slate-800 mb-1 text-sm sm:text-base dark:text-slate-200">台灣投資組合蒙地卡羅模擬器 (Taiwan Portfolio Visualizer Monte Carlo Simulator)</p>
+      <p class="text-xs text-slate-400 dark:text-slate-500">
         本工具僅供學術模擬與個人財務規劃研究參考，非特定金融商品之投資推介或報酬保證。投資有風險，過去績效不代表未來表現。
       </p>
     </div>
