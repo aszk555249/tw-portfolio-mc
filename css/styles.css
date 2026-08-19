@@ -1,0 +1,261 @@
+/* Taiwan Portfolio Visualizer Custom CSS & Print Styles */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', 'Noto Sans TC', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 1rem;
+  line-height: 1.6;
+  background-color: #f8fafc;
+}
+
+/* 強化版卡片外框 (邊框加深、層次分明) */
+.glass-card {
+  background: #ffffff;
+  border: 1.5px solid #cbd5e1 !important; /* 加深外框線條，層次鮮明 */
+  box-shadow: 0 4px 14px -2px rgba(15, 23, 42, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.glass-card:hover {
+  border-color: #94a3b8 !important;
+}
+
+.dark .glass-card {
+  background: rgba(30, 41, 59, 0.95);
+  border: 1.5px solid #475569 !important;
+}
+
+/* 強化所有輸入框與選單邊框線條 */
+input[type="number"],
+input[type="text"],
+select {
+  border-color: #94a3b8 !important;
+  border-width: 1.5px !important;
+}
+
+input:focus,
+select:focus {
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18) !important;
+}
+
+/* 全域邊框顏色加深補強 */
+.border-slate-100 {
+  border-color: #e2e8f0 !important;
+}
+
+.border-slate-200 {
+  border-color: #cbd5e1 !important;
+}
+
+.border-slate-300 {
+  border-color: #94a3b8 !important;
+}
+
+/* 漸層文字 */
+.gradient-text {
+  background: linear-gradient(135deg, #2563eb 0%, #7c3aed 50%, #db2777 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* 隱藏 number input 預設 spinner 避免擠壓文字 */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+/* 捲軸美化 */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 9999px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #475569;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+/* 動畫與過渡 */
+.fade-in {
+  animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 權重總和狀態指示 */
+.weight-badge-valid {
+  background-color: #dcfce7;
+  color: #15803d;
+  border: 1.5px solid #4ade80 !important;
+}
+
+.weight-badge-invalid {
+  background-color: #fee2e2;
+  color: #b91c1c;
+  border: 1.5px solid #f87171 !important;
+}
+
+/* 運算更新高亮動畫 (點擊執行後的視覺反饋) */
+.flash-update {
+  animation: flashHighlight 0.6s ease-out;
+}
+
+@keyframes flashHighlight {
+  0% {
+    background-color: rgba(59, 130, 246, 0.18);
+    transform: scale(1.01);
+  }
+  50% {
+    background-color: rgba(59, 130, 246, 0.08);
+  }
+  100% {
+    background-color: transparent;
+    transform: scale(1);
+  }
+}
+
+/* 按鈕點擊波紋與縮放 */
+#btn-run-simulation:active {
+  transform: scale(0.97) !important;
+}
+
+.btn-simulation-running {
+  background: linear-gradient(135deg, #475569 0%, #334155 100%) !important;
+  cursor: wait !important;
+}
+
+.btn-simulation-success {
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%) !important;
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.5) !important;
+}
+
+/* ================= 手機與行動裝置排版深度最佳化 (Mobile First RWD) ================= */
+
+/* 隱藏特定捲軸但保留觸控滑動功能 */
+.no-scrollbar::-webkit-scrollbar {
+  display: none !important;
+}
+.no-scrollbar {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}
+
+/* 觸控滑動平滑感 */
+.touch-scroll-x {
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  scroll-behavior: smooth !important;
+  overscroll-behavior-x: contain !important;
+}
+
+/* 防止 iOS Safari 在輸入框 focus 時自動放大畫面 (要求 >= 16px) */
+@media (max-width: 768px) {
+  input[type="text"],
+  input[type="number"],
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+
+  /* 消除手機點擊時的藍色高亮灰色陰影 */
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* 手機版卡片適度縮小內距，增加可用閱讀區域 */
+  .glass-card {
+    padding: 0.875rem !important;
+    border-radius: 1rem !important;
+  }
+
+  /* 主內容容器底部留白，避免被浮動手機捷徑列遮擋 */
+  #main-content {
+    padding-bottom: 5.5rem !important;
+  }
+}
+
+/* 手機版專屬底部浮動快捷導航 Bar */
+.mobile-bottom-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1.5px solid #cbd5e1;
+  padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
+  box-shadow: 0 -4px 20px -2px rgba(15, 23, 42, 0.12);
+}
+
+.dark .mobile-bottom-bar {
+  background: rgba(15, 23, 42, 0.92);
+  border-top: 1.5px solid #334155;
+}
+
+/* ================= 列印專用樣式 (A4 PDF 報告最佳化) ================= */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-size: 11pt !important;
+  }
+
+  .no-print,
+  .mobile-bottom-bar {
+    display: none !important;
+  }
+
+  .glass-card {
+    box-shadow: none !important;
+    border: 1.5px solid #64748b !important;
+    break-inside: avoid;
+    margin-bottom: 1rem !important;
+  }
+
+  canvas {
+    max-height: 320px !important;
+  }
+
+  table {
+    font-size: 9pt !important;
+  }
+}

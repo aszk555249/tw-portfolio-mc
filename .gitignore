@@ -1,0 +1,16 @@
+﻿# 系統與暫存檔案
+.DS_Store
+Thumbs.db
+*.lnk
+
+# 可攜式 Git 工具本身不需上傳
+vendor/git/
+
+# 測試與除錯檔案
+test_*.html
+test_*.txt
+*.log
+
+# 編輯器快取
+.vscode/
+.idea/
