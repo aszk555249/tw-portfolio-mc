@@ -3,7 +3,9 @@
 Thumbs.db
 *.lnk
 
-# 可攜式 Git 工具本身不需上傳
+# 本地腳本與金鑰安全保護 (不推送到 GitHub)
+*.bat
+*.ps1
 vendor/git/
 
 # 測試與除錯檔案

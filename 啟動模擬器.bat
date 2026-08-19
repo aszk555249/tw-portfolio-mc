@@ -1,2 +1,0 @@
-@echo off
-powershell -NoProfile -ExecutionPolicy Bypass -Command "Start-Process 'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe' -ArgumentList '--disable-web-security', '--user-data-dir=`"$env:TEMP\mc-sim-profile`"', '--app=`"c:\Users\aszk5\OneDrive\Antigravity\ªX¶a•d√πº“¿¿æπ\index.html`"'"
