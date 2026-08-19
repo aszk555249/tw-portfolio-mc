@@ -578,18 +578,18 @@
               <!-- 動態注入多時期卡片 -->
             </div>
 
-            <div class="grid grid-cols-3 gap-2 pt-1.5 border-t border-slate-100 dark:border-slate-700/60">
-              <button type="button" id="btn-add-stage-contrib" class="py-2 px-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-xl text-xs font-bold flex items-center justify-center gap-1 border border-emerald-200 transition dark:bg-emerald-950/30 dark:hover:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-800/50">
-                <i data-lucide="plus" class="w-3.5 h-3.5"></i>
-                + 定期定額
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1.5 border-t border-slate-100 dark:border-slate-700/60">
+              <button type="button" id="btn-add-stage-contrib" class="py-2.5 px-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-1.5 border border-emerald-200 transition dark:bg-emerald-950/30 dark:hover:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-800/50">
+                <i data-lucide="plus" class="w-3.5 h-3.5 shrink-0"></i>
+                <span>+ 定期定額階段</span>
               </button>
-              <button type="button" id="btn-add-stage-lumpin" class="py-2 px-2 bg-blue-50 hover:bg-blue-100 text-blue-800 rounded-xl text-xs font-bold flex items-center justify-center gap-1 border border-blue-200 transition dark:bg-blue-950/30 dark:hover:bg-blue-900/40 dark:text-blue-300 dark:border-blue-800/50">
-                <i data-lucide="plus" class="w-3.5 h-3.5"></i>
-                + 單筆投入
+              <button type="button" id="btn-add-stage-lumpin" class="py-2.5 px-3 bg-blue-50 hover:bg-blue-100 text-blue-800 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-1.5 border border-blue-200 transition dark:bg-blue-950/30 dark:hover:bg-blue-900/40 dark:text-blue-300 dark:border-blue-800/50">
+                <i data-lucide="plus" class="w-3.5 h-3.5 shrink-0"></i>
+                <span>+ 單筆投入加碼</span>
               </button>
-              <button type="button" id="btn-add-stage-withdraw" class="py-2 px-2 bg-purple-50 hover:bg-purple-100 text-purple-800 rounded-xl text-xs font-bold flex items-center justify-center gap-1 border border-purple-200 transition dark:bg-purple-950/30 dark:hover:bg-purple-900/40 dark:text-purple-300 dark:border-purple-800/50">
-                <i data-lucide="plus" class="w-3.5 h-3.5"></i>
-                + 退休提領
+              <button type="button" id="btn-add-stage-withdraw" class="py-2.5 px-3 bg-purple-50 hover:bg-purple-100 text-purple-800 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-1.5 border border-purple-200 transition dark:bg-purple-950/30 dark:hover:bg-purple-900/40 dark:text-purple-300 dark:border-purple-800/50">
+                <i data-lucide="plus" class="w-3.5 h-3.5 shrink-0"></i>
+                <span>+ 退休提領階段</span>
               </button>
             </div>
           </div>
@@ -600,14 +600,14 @@
         <div class="glass-card rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200 space-y-4 dark:border-slate-700">
           <div class="flex items-center justify-between border-b border-slate-100 pb-2.5 dark:border-slate-700/60">
             <h2 class="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2 dark:text-slate-100">
-              <i data-lucide="scale" class="w-4 h-4 text-amber-600"></i>
+              <i data-lucide="scale" class="w-4 h-4 text-amber-600 shrink-0"></i>
               槓桿與借貸投資策略 (Leverage & Debt)
             </h2>
             
-            <label class="relative inline-flex items-center cursor-pointer">
+            <label class="relative inline-flex items-center cursor-pointer shrink-0">
               <input type="checkbox" id="check-enable-debt" class="sr-only peer">
               <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-600 dark:bg-slate-700"></div>
-              <span class="ml-2 text-xs font-bold text-slate-700 dark:text-slate-300" id="label-enable-debt">未啟用</span>
+              <span class="ml-2 text-xs font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap" id="label-enable-debt">未啟用</span>
             </label>
           </div>
 
@@ -620,13 +620,13 @@
                 <span class="text-xs font-bold text-slate-600 dark:text-slate-400">快速套用經典槓桿範本：</span>
               </div>
               <div class="grid grid-cols-1 sm:grid-cols-3 gap-1.5">
-                <button type="button" class="btn-quick-debt-preset py-2 px-2 text-xs bg-amber-50 hover:bg-amber-100 text-amber-900 rounded-xl font-bold border border-amber-200 transition text-left shadow-2xs dark:bg-amber-950/30 dark:hover:bg-amber-900/40 dark:text-amber-200 dark:border-amber-800/50" data-preset="loan_7y_200w">
+                <button type="button" class="btn-quick-debt-preset py-2 px-2.5 text-xs bg-amber-50 hover:bg-amber-100 text-amber-900 rounded-xl font-bold border border-amber-200 transition text-left shadow-2xs dark:bg-amber-950/30 dark:hover:bg-amber-900/40 dark:text-amber-200 dark:border-amber-800/50" data-preset="loan_7y_200w">
                   🏦 7年信貸200萬<br><span class="text-[10px] font-normal text-amber-700 dark:text-amber-400">2.2% 本息均攤</span>
                 </button>
-                <button type="button" class="btn-quick-debt-preset py-2 px-2 text-xs bg-amber-50 hover:bg-amber-100 text-amber-900 rounded-xl font-bold border border-amber-200 transition text-left shadow-2xs dark:bg-amber-950/30 dark:hover:bg-amber-900/40 dark:text-amber-200 dark:border-amber-800/50" data-preset="pledge_150w_roll">
+                <button type="button" class="btn-quick-debt-preset py-2 px-2.5 text-xs bg-amber-50 hover:bg-amber-100 text-amber-900 rounded-xl font-bold border border-amber-200 transition text-left shadow-2xs dark:bg-amber-950/30 dark:hover:bg-amber-900/40 dark:text-amber-200 dark:border-amber-800/50" data-preset="pledge_150w_roll">
                   📈 股票質押150萬<br><span class="text-[10px] font-normal text-amber-700 dark:text-amber-400">2.8% 只繳息展延</span>
                 </button>
-                <button type="button" class="btn-quick-debt-preset py-2 px-2 text-xs bg-amber-50 hover:bg-amber-100 text-amber-900 rounded-xl font-bold border border-amber-200 transition text-left shadow-2xs dark:bg-amber-950/30 dark:hover:bg-amber-900/40 dark:text-amber-200 dark:border-amber-800/50" data-preset="futures_margin_100w">
+                <button type="button" class="btn-quick-debt-preset py-2 px-2.5 text-xs bg-amber-50 hover:bg-amber-100 text-amber-900 rounded-xl font-bold border border-amber-200 transition text-left shadow-2xs dark:bg-amber-950/30 dark:hover:bg-amber-900/40 dark:text-amber-200 dark:border-amber-800/50" data-preset="futures_margin_100w">
                   ⚡ 期貨保證金槓桿<br><span class="text-[10px] font-normal text-amber-700 dark:text-amber-400">100萬 2.0% 轉倉成本</span>
                 </button>
               </div>
@@ -638,18 +638,18 @@
             </div>
 
             <!-- 新增借貸按鈕組 -->
-            <div class="grid grid-cols-3 gap-2 pt-1 border-t border-slate-100 dark:border-slate-700/60">
-              <button type="button" id="btn-add-debt-personal" class="py-2 px-1.5 bg-slate-100 hover:bg-amber-50 hover:text-amber-800 text-slate-700 rounded-xl text-xs font-bold flex items-center justify-center gap-1 border border-slate-200 transition dark:bg-slate-800 dark:hover:bg-amber-950/30 dark:text-slate-300 dark:hover:text-amber-300 dark:border-slate-700">
-                <i data-lucide="plus" class="w-3.5 h-3.5"></i>
-                + 信貸 (本息攤)
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 border-t border-slate-100 dark:border-slate-700/60">
+              <button type="button" id="btn-add-debt-personal" class="py-2.5 px-3 bg-slate-100 hover:bg-amber-50 hover:text-amber-800 text-slate-700 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-1.5 border border-slate-200 transition dark:bg-slate-800 dark:hover:bg-amber-950/30 dark:text-slate-300 dark:hover:text-amber-300 dark:border-slate-700">
+                <i data-lucide="plus" class="w-3.5 h-3.5 shrink-0"></i>
+                <span>+ 信貸 (本息攤還)</span>
               </button>
-              <button type="button" id="btn-add-debt-pledge" class="py-2 px-1.5 bg-slate-100 hover:bg-amber-50 hover:text-amber-800 text-slate-700 rounded-xl text-xs font-bold flex items-center justify-center gap-1 border border-slate-200 transition dark:bg-slate-800 dark:hover:bg-amber-950/30 dark:text-slate-300 dark:hover:text-amber-300 dark:border-slate-700">
-                <i data-lucide="plus" class="w-3.5 h-3.5"></i>
-                + 質押 (只繳息)
+              <button type="button" id="btn-add-debt-pledge" class="py-2.5 px-3 bg-slate-100 hover:bg-amber-50 hover:text-amber-800 text-slate-700 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-1.5 border border-slate-200 transition dark:bg-slate-800 dark:hover:bg-amber-950/30 dark:text-slate-300 dark:hover:text-amber-300 dark:border-slate-700">
+                <i data-lucide="plus" class="w-3.5 h-3.5 shrink-0"></i>
+                <span>+ 質押借款 (只繳息)</span>
               </button>
-              <button type="button" id="btn-add-debt-futures" class="py-2 px-1.5 bg-slate-100 hover:bg-amber-50 hover:text-amber-800 text-slate-700 rounded-xl text-xs font-bold flex items-center justify-center gap-1 border border-slate-200 transition dark:bg-slate-800 dark:hover:bg-amber-950/30 dark:text-slate-300 dark:hover:text-amber-300 dark:border-slate-700">
-                <i data-lucide="plus" class="w-3.5 h-3.5"></i>
-                + 期貨 (資金成本)
+              <button type="button" id="btn-add-debt-futures" class="py-2.5 px-3 bg-slate-100 hover:bg-amber-50 hover:text-amber-800 text-slate-700 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-1.5 border border-slate-200 transition dark:bg-slate-800 dark:hover:bg-amber-950/30 dark:text-slate-300 dark:hover:text-amber-300 dark:border-slate-700">
+                <i data-lucide="plus" class="w-3.5 h-3.5 shrink-0"></i>
+                <span>+ 期貨槓桿 (資金成本)</span>
               </button>
             </div>
 
@@ -740,46 +740,46 @@
         </div>
 
         <!-- A. 核心指標卡片區 (KPI Summary) -->
-        <div id="kpi-cards-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+        <div id="kpi-cards-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4">
           
           <!-- 中位數預期終值 -->
-          <div class="glass-card rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200 dark:border-slate-700">
+          <div class="glass-card rounded-2xl p-3.5 sm:p-5 shadow-sm border border-slate-200 min-w-0 dark:border-slate-700">
             <div class="flex items-center justify-between text-slate-500 text-xs sm:text-sm mb-1 font-bold dark:text-slate-400">
-              <span>中位數終值 (50%)</span>
-              <i data-lucide="trending-up" class="w-4 h-4 text-blue-500"></i>
+              <span class="truncate">中位數終值 (50%)</span>
+              <i data-lucide="trending-up" class="w-4 h-4 text-blue-500 shrink-0"></i>
             </div>
-            <div id="kpi-p50" class="text-xl sm:text-2xl font-black text-blue-600">--</div>
-            <div id="kpi-p50-sub" class="text-xs text-slate-500 mt-0.5 font-semibold dark:text-slate-400">實質購買力</div>
+            <div id="kpi-p50" class="text-lg sm:text-2xl font-black text-blue-600 truncate tracking-tight">--</div>
+            <div id="kpi-p50-sub" class="text-[11px] sm:text-xs text-slate-500 mt-0.5 font-semibold dark:text-slate-400 truncate">實質購買力</div>
           </div>
 
           <!-- 目標存活 / 成功率 -->
-          <div class="glass-card rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200 dark:border-slate-700">
+          <div class="glass-card rounded-2xl p-3.5 sm:p-5 shadow-sm border border-slate-200 min-w-0 dark:border-slate-700">
             <div class="flex items-center justify-between text-slate-500 text-xs sm:text-sm mb-1 font-bold dark:text-slate-400">
-              <span>投資組合存活率</span>
-              <i data-lucide="shield-check" class="w-4 h-4 text-emerald-500"></i>
+              <span class="truncate">投資組合存活率</span>
+              <i data-lucide="shield-check" class="w-4 h-4 text-emerald-500 shrink-0"></i>
             </div>
-            <div id="kpi-success-rate" class="text-xl sm:text-2xl font-black text-emerald-600">--</div>
-            <div id="kpi-ruin-text" class="text-xs text-slate-500 mt-0.5 font-semibold dark:text-slate-400">破產風險: 0%</div>
+            <div id="kpi-success-rate" class="text-lg sm:text-2xl font-black text-emerald-600 truncate tracking-tight">--</div>
+            <div id="kpi-ruin-text" class="text-[11px] sm:text-xs text-slate-500 mt-0.5 font-semibold dark:text-slate-400 truncate">破產風險: 0%</div>
           </div>
 
           <!-- 最悲觀市場考驗 (10th) -->
-          <div class="glass-card rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200 dark:border-slate-700">
+          <div class="glass-card rounded-2xl p-3.5 sm:p-5 shadow-sm border border-slate-200 min-w-0 dark:border-slate-700">
             <div class="flex items-center justify-between text-slate-500 text-xs sm:text-sm mb-1 font-bold dark:text-slate-400">
-              <span>最悲觀情況 (10%)</span>
-              <i data-lucide="cloud-rain" class="w-4 h-4 text-amber-500"></i>
+              <span class="truncate">最悲觀情況 (10%)</span>
+              <i data-lucide="cloud-rain" class="w-4 h-4 text-amber-500 shrink-0"></i>
             </div>
-            <div id="kpi-p10" class="text-xl sm:text-2xl font-black text-amber-600">--</div>
-            <div class="text-xs text-slate-500 mt-0.5 font-semibold dark:text-slate-400">極端逆風下水準</div>
+            <div id="kpi-p10" class="text-lg sm:text-2xl font-black text-amber-600 truncate tracking-tight">--</div>
+            <div class="text-[11px] sm:text-xs text-slate-500 mt-0.5 font-semibold dark:text-slate-400 truncate">極端逆風下水準</div>
           </div>
 
           <!-- 中位數最大回撤 (Max Drawdown) -->
-          <div class="glass-card rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200 dark:border-slate-700">
+          <div class="glass-card rounded-2xl p-3.5 sm:p-5 shadow-sm border border-slate-200 min-w-0 dark:border-slate-700">
             <div class="flex items-center justify-between text-slate-500 text-xs sm:text-sm mb-1 font-bold dark:text-slate-400">
-              <span>中位數最大回撤</span>
-              <i data-lucide="arrow-down-right" class="w-4 h-4 text-rose-500"></i>
+              <span class="truncate">中位數最大回撤</span>
+              <i data-lucide="arrow-down-right" class="w-4 h-4 text-rose-500 shrink-0"></i>
             </div>
-            <div id="kpi-drawdown" class="text-xl sm:text-2xl font-black text-rose-600">--</div>
-            <div id="kpi-worst-dd" class="text-xs text-slate-500 mt-0.5 font-semibold dark:text-slate-400">最差回撤: --</div>
+            <div id="kpi-drawdown" class="text-lg sm:text-2xl font-black text-rose-600 truncate tracking-tight">--</div>
+            <div id="kpi-worst-dd" class="text-[11px] sm:text-xs text-slate-500 mt-0.5 font-semibold dark:text-slate-400 truncate">最差回撤: --</div>
           </div>
 
         </div>

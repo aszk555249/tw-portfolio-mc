@@ -1305,35 +1305,36 @@ document.addEventListener('DOMContentLoaded', () => {
         card.innerHTML = `
           <div class="flex items-center justify-between border-b border-slate-100 pb-2 dark:border-slate-700/60">
             <span class="text-sm font-black text-emerald-700 flex items-center gap-1.5 dark:text-emerald-400">
-              <i data-lucide="calendar" class="w-4 h-4"></i>
+              <i data-lucide="calendar" class="w-4 h-4 shrink-0"></i>
               定期定額階段 ${idx + 1}
             </span>
             <button type="button" class="btn-remove-stage text-slate-400 hover:text-rose-600 p-1 rounded-lg hover:bg-rose-50 transition dark:text-slate-500 dark:hover:bg-rose-900/30 dark:hover:text-rose-400" data-idx="${idx}">
               <i data-lucide="x" class="w-4 h-4"></i>
             </button>
           </div>
-          <div class="grid grid-cols-12 gap-3 text-xs sm:text-sm">
-            <div class="col-span-5">
+          <div class="grid grid-cols-12 gap-2.5 sm:gap-3 text-xs sm:text-sm">
+            <div class="col-span-12 sm:col-span-5">
               <label class="text-slate-600 font-bold block mb-1 dark:text-slate-400">年期區間 (第X年~第Y年)</label>
               <div class="flex items-center gap-1.5">
-                <input type="number" min="1" max="${totalYears}" value="${stage.startYear}" class="stage-field w-14 p-1.5 border border-slate-300 rounded-lg text-center font-bold text-slate-900 dark:border-slate-600 dark:text-slate-100" data-idx="${idx}" data-prop="startYear">
-                <span class="font-bold">~</span>
-                <input type="number" min="1" max="${totalYears}" value="${stage.endYear}" class="stage-field w-14 p-1.5 border border-slate-300 rounded-lg text-center font-bold text-slate-900 dark:border-slate-600 dark:text-slate-100" data-idx="${idx}" data-prop="endYear">
-                <span class="font-bold">年</span>
+                <span class="font-bold shrink-0">第</span>
+                <input type="number" min="1" max="${totalYears}" value="${stage.startYear}" class="stage-field flex-1 sm:w-16 p-1.5 border border-slate-300 rounded-lg text-center font-bold text-slate-900 dark:border-slate-600 dark:text-slate-100" data-idx="${idx}" data-prop="startYear">
+                <span class="font-bold shrink-0">~</span>
+                <input type="number" min="1" max="${totalYears}" value="${stage.endYear}" class="stage-field flex-1 sm:w-16 p-1.5 border border-slate-300 rounded-lg text-center font-bold text-slate-900 dark:border-slate-600 dark:text-slate-100" data-idx="${idx}" data-prop="endYear">
+                <span class="font-bold shrink-0">年</span>
               </div>
             </div>
-            <div class="col-span-4">
+            <div class="col-span-7 sm:col-span-4">
               <label class="text-slate-600 font-bold block mb-1 dark:text-slate-400">投入金額 (${currSymbol})</label>
               <input type="number" step="1000" min="0" value="${stage.amount}" class="stage-field w-full p-1.5 border border-slate-300 rounded-lg font-bold text-slate-900 dark:border-slate-600 dark:text-slate-100" data-idx="${idx}" data-prop="amount">
             </div>
-            <div class="col-span-3">
+            <div class="col-span-5 sm:col-span-3">
               <label class="text-slate-600 font-bold block mb-1 dark:text-slate-400">頻率</label>
               <select class="stage-field w-full p-1.5 border border-slate-300 rounded-lg font-bold text-slate-900 dark:border-slate-600 dark:text-slate-100" data-idx="${idx}" data-prop="frequency">
                 <option value="monthly" ${stage.frequency === 'monthly' ? 'selected' : ''}>每月</option>
                 <option value="annual" ${stage.frequency === 'annual' ? 'selected' : ''}>每年</option>
               </select>
             </div>
-            <div class="col-span-12 sm:col-span-5">
+            <div class="col-span-12">
               <label class="text-slate-600 font-bold block mb-1 dark:text-slate-400">每年投入成長率 (%，模擬加薪/通膨調升)</label>
               <input type="number" step="0.1" min="0" max="20" value="${((stage.growthRate ?? 0.02) * 100).toFixed(1)}" class="stage-field w-full p-1.5 border border-slate-300 rounded-lg font-bold text-slate-900 dark:border-slate-600 dark:text-slate-100" data-idx="${idx}" data-prop="growthRate">
             </div>
@@ -1343,23 +1344,23 @@ document.addEventListener('DOMContentLoaded', () => {
         card.innerHTML = `
           <div class="flex items-center justify-between border-b border-slate-100 pb-2 dark:border-slate-700/60">
             <span class="text-sm font-black text-blue-700 flex items-center gap-1.5 dark:text-blue-400">
-              <i data-lucide="coins" class="w-4 h-4"></i>
+              <i data-lucide="coins" class="w-4 h-4 shrink-0"></i>
               單筆投入/加碼
             </span>
             <button type="button" class="btn-remove-stage text-slate-400 hover:text-rose-600 p-1 rounded-lg hover:bg-rose-50 transition dark:text-slate-500 dark:hover:bg-rose-900/30 dark:hover:text-rose-400" data-idx="${idx}">
               <i data-lucide="x" class="w-4 h-4"></i>
             </button>
           </div>
-          <div class="grid grid-cols-12 gap-3 text-xs sm:text-sm">
-            <div class="col-span-5">
+          <div class="grid grid-cols-12 gap-2.5 sm:gap-3 text-xs sm:text-sm">
+            <div class="col-span-12 sm:col-span-5">
               <label class="text-slate-600 font-bold block mb-1 dark:text-slate-400">在第幾年單筆注入</label>
               <div class="flex items-center gap-1.5">
-                <span class="font-bold">第</span>
-                <input type="number" min="1" max="${totalYears}" value="${stage.year}" class="stage-field w-16 p-1.5 border border-slate-300 rounded-lg text-center font-bold text-slate-900 dark:border-slate-600 dark:text-slate-100" data-idx="${idx}" data-prop="year">
-                <span class="font-bold">年</span>
+                <span class="font-bold shrink-0">第</span>
+                <input type="number" min="1" max="${totalYears}" value="${stage.year}" class="stage-field flex-1 sm:w-16 p-1.5 border border-slate-300 rounded-lg text-center font-bold text-slate-900 dark:border-slate-600 dark:text-slate-100" data-idx="${idx}" data-prop="year">
+                <span class="font-bold shrink-0">年</span>
               </div>
             </div>
-            <div class="col-span-7">
+            <div class="col-span-12 sm:col-span-7">
               <label class="text-slate-600 font-bold block mb-1 dark:text-slate-400">單筆注入金額 (${currSymbol})</label>
               <input type="number" step="50000" min="0" value="${stage.amount}" class="stage-field w-full p-1.5 border border-slate-300 rounded-lg font-bold text-slate-900 dark:border-slate-600 dark:text-slate-100" data-idx="${idx}" data-prop="amount">
             </div>
@@ -1369,24 +1370,25 @@ document.addEventListener('DOMContentLoaded', () => {
         card.innerHTML = `
           <div class="flex items-center justify-between border-b border-slate-100 pb-2 dark:border-slate-700/60">
             <span class="text-sm font-black text-purple-700 flex items-center gap-1.5 dark:text-purple-400">
-              <i data-lucide="coffee" class="w-4 h-4"></i>
+              <i data-lucide="coffee" class="w-4 h-4 shrink-0"></i>
               退休提領階段 ${idx + 1}
             </span>
             <button type="button" class="btn-remove-stage text-slate-400 hover:text-rose-600 p-1 rounded-lg hover:bg-rose-50 transition dark:text-slate-500 dark:hover:bg-rose-900/30 dark:hover:text-rose-400" data-idx="${idx}">
               <i data-lucide="x" class="w-4 h-4"></i>
             </button>
           </div>
-          <div class="grid grid-cols-12 gap-3 text-xs sm:text-sm">
-            <div class="col-span-5">
+          <div class="grid grid-cols-12 gap-2.5 sm:gap-3 text-xs sm:text-sm">
+            <div class="col-span-12 sm:col-span-5">
               <label class="text-slate-600 font-bold block mb-1 dark:text-slate-400">提領年期區間</label>
               <div class="flex items-center gap-1.5">
-                <input type="number" min="1" max="${totalYears}" value="${stage.startYear}" class="stage-field w-14 p-1.5 border border-slate-300 rounded-lg text-center font-bold text-slate-900 dark:border-slate-600 dark:text-slate-100" data-idx="${idx}" data-prop="startYear">
-                <span class="font-bold">~</span>
-                <input type="number" min="1" max="${totalYears}" value="${stage.endYear}" class="stage-field w-14 p-1.5 border border-slate-300 rounded-lg text-center font-bold text-slate-900 dark:border-slate-600 dark:text-slate-100" data-idx="${idx}" data-prop="endYear">
-                <span class="font-bold">年</span>
+                <span class="font-bold shrink-0">第</span>
+                <input type="number" min="1" max="${totalYears}" value="${stage.startYear}" class="stage-field flex-1 sm:w-14 p-1.5 border border-slate-300 rounded-lg text-center font-bold text-slate-900 dark:border-slate-600 dark:text-slate-100" data-idx="${idx}" data-prop="startYear">
+                <span class="font-bold shrink-0">~</span>
+                <input type="number" min="1" max="${totalYears}" value="${stage.endYear}" class="stage-field flex-1 sm:w-14 p-1.5 border border-slate-300 rounded-lg text-center font-bold text-slate-900 dark:border-slate-600 dark:text-slate-100" data-idx="${idx}" data-prop="endYear">
+                <span class="font-bold shrink-0">年</span>
               </div>
             </div>
-            <div class="col-span-4">
+            <div class="col-span-7 sm:col-span-4">
               <label class="text-slate-600 font-bold block mb-1 dark:text-slate-400">提領法則</label>
               <select class="stage-field w-full p-1.5 border border-slate-300 rounded-lg font-bold text-slate-900 dark:border-slate-600 dark:text-slate-100" data-idx="${idx}" data-prop="withdrawalType">
                 <option value="fixed_amount" ${stage.withdrawalType === 'fixed_amount' ? 'selected' : ''}>4% 通膨調整</option>
@@ -1395,18 +1397,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 <option value="floor_ceiling" ${stage.withdrawalType === 'floor_ceiling' ? 'selected' : ''}>上下限保護 (±5%)</option>
               </select>
             </div>
-            <div class="col-span-3">
+            <div class="col-span-5 sm:col-span-3">
               <label class="text-slate-600 font-bold block mb-1 dark:text-slate-400">提領率 (%)</label>
               <input type="number" step="0.1" min="0.5" max="15" value="${(stage.rate * 100).toFixed(1)}" class="stage-field w-full p-1.5 border border-slate-300 rounded-lg font-bold text-slate-900 dark:border-slate-600 dark:text-slate-100" data-idx="${idx}" data-prop="rate">
             </div>
-            <div class="col-span-7">
-              <label class="text-slate-600 font-bold block mb-1 dark:text-slate-400">首年固定金額 (${currSymbol}，留 0 則改用提領率)</label>
+            <div class="col-span-12 sm:col-span-7">
+              <label class="text-slate-600 font-bold block mb-1 dark:text-slate-400">首年固定金額 (${currSymbol}，留 0 則用提領率)</label>
               <input type="number" step="1000" min="0" value="${stage.customAmount || 0}" class="stage-field w-full p-1.5 border border-slate-300 rounded-lg font-bold text-slate-900 dark:border-slate-600 dark:text-slate-100" data-idx="${idx}" data-prop="customAmount">
             </div>
-            <div class="col-span-5 flex items-end pb-1.5">
+            <div class="col-span-12 sm:col-span-5 flex items-center pt-1 sm:pt-0 sm:items-end sm:pb-1.5">
               <label class="flex items-center gap-2 text-slate-600 font-bold cursor-pointer dark:text-slate-400">
                 <input type="checkbox" ${stage.adjustInflation !== false ? 'checked' : ''} class="stage-field w-4 h-4 rounded accent-purple-600" data-idx="${idx}" data-prop="adjustInflation">
-                隨通膨調升
+                <span>每年隨通膨調升金額</span>
               </label>
             </div>
           </div>
@@ -1583,43 +1585,43 @@ document.addEventListener('DOMContentLoaded', () => {
           </button>
         </div>
 
-        <div class="grid grid-cols-12 gap-2.5 text-xs sm:text-sm">
+        <div class="grid grid-cols-12 gap-2.5 sm:gap-3 text-xs sm:text-sm">
           <!-- 借款金額 -->
-          <div class="col-span-6 sm:col-span-4">
+          <div class="col-span-12 sm:col-span-4">
             <label class="text-slate-600 font-bold block mb-1 dark:text-slate-400">借款本金/槓桿部位 (${currSymbol})</label>
             <input type="number" step="50000" min="0" value="${amount}" class="debt-field w-full p-1.5 border border-slate-300 rounded-lg font-black text-amber-800 dark:bg-slate-900 dark:border-slate-600 dark:text-amber-300" data-idx="${idx}" data-prop="amount">
           </div>
 
           <!-- 年利率 -->
-          <div class="col-span-6 sm:col-span-3">
+          <div class="col-span-12 sm:col-span-3">
             <label class="text-slate-600 font-bold block mb-1 dark:text-slate-400">年利率 / 資金成本 (%)</label>
             <div class="flex items-center rounded-lg border border-slate-300 overflow-hidden dark:border-slate-600 dark:bg-slate-900">
               <input type="number" step="0.001" min="0" max="50" value="${ratePct}" class="debt-field w-full p-1.5 font-bold text-slate-900 bg-transparent focus:outline-none dark:text-slate-100" data-idx="${idx}" data-prop="interestRate">
-              <span class="px-2 text-slate-500 font-bold text-xs">%</span>
+              <span class="px-2 text-slate-500 font-bold text-xs shrink-0">%</span>
             </div>
           </div>
 
           <!-- 借款開始年份 -->
           <div class="col-span-6 sm:col-span-2">
             <label class="text-slate-600 font-bold block mb-1 dark:text-slate-400">借入年份</label>
-            <div class="flex items-center gap-1">
-              <span class="text-slate-500 text-xs">第</span>
+            <div class="flex items-center gap-1.5">
+              <span class="text-slate-500 text-xs font-bold shrink-0">第</span>
               <input type="number" min="1" max="${totalYears}" value="${startYear}" class="debt-field w-full p-1.5 border border-slate-300 rounded-lg text-center font-bold text-slate-900 dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100" data-idx="${idx}" data-prop="startYear">
-              <span class="text-slate-500 text-xs">年</span>
+              <span class="text-slate-500 text-xs font-bold shrink-0">年</span>
             </div>
           </div>
 
           <!-- 借款年限 -->
           <div class="col-span-6 sm:col-span-3">
             <label class="text-slate-600 font-bold block mb-1 dark:text-slate-400">年限期數 (年)</label>
-            <div class="flex items-center gap-1">
+            <div class="flex items-center gap-1.5">
               <input type="number" min="1" max="60" value="${duration}" class="debt-field w-full p-1.5 border border-slate-300 rounded-lg text-center font-bold text-slate-900 dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100" data-idx="${idx}" data-prop="durationYears">
-              <span class="text-slate-500 text-xs">年</span>
+              <span class="text-slate-500 text-xs font-bold shrink-0">年</span>
             </div>
           </div>
 
           <!-- 還款來源 -->
-          <div class="col-span-6 sm:col-span-6">
+          <div class="col-span-12 sm:col-span-6">
             <label class="text-slate-600 font-bold block mb-1 dark:text-slate-400">還款金流來源</label>
             <select class="debt-field w-full p-1.5 border border-slate-300 rounded-lg font-bold text-slate-900 dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100" data-idx="${idx}" data-prop="cashflowSource">
               <option value="portfolio" ${cashflowSource === 'portfolio' ? 'selected' : ''}>從投資組合扣款 (投組自償)</option>
@@ -1628,7 +1630,7 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
 
           <!-- 到期處理 -->
-          <div class="col-span-6 sm:col-span-6 ${type === 'personal_loan' ? 'opacity-60 pointer-events-none' : ''}">
+          <div class="col-span-12 sm:col-span-6 ${type === 'personal_loan' ? 'opacity-60 pointer-events-none' : ''}">
             <label class="text-slate-600 font-bold block mb-1 dark:text-slate-400">到期處理方式</label>
             <select class="debt-field w-full p-1.5 border border-slate-300 rounded-lg font-bold text-slate-900 dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100" data-idx="${idx}" data-prop="repaymentMode">
               <option value="rollover" ${repaymentMode === 'rollover' ? 'selected' : ''}>到期自動展延 (只繳息到底)</option>
@@ -1638,9 +1640,9 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
 
           <!-- 即時試算預覽小列 -->
-          <div class="col-span-12 p-2 bg-amber-50/70 rounded-xl border border-amber-200/70 text-[11px] sm:text-xs text-amber-950 font-medium dark:bg-amber-950/20 dark:border-amber-800/40 dark:text-amber-200 flex items-center justify-between">
-            <span>💡 試算：${calcPreview}</span>
-            <span class="text-[10px] text-amber-700 font-bold dark:text-amber-400">${typeDesc}</span>
+          <div class="col-span-12 p-2.5 bg-amber-50/70 rounded-xl border border-amber-200/70 text-xs text-amber-950 font-medium dark:bg-amber-950/20 dark:border-amber-800/40 dark:text-amber-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1 leading-relaxed">
+            <div>💡 試算：${calcPreview}</div>
+            <div class="text-[11px] text-amber-800 font-bold dark:text-amber-300 shrink-0">${typeDesc}</div>
           </div>
         </div>
       `;
@@ -1839,12 +1841,12 @@ document.addEventListener('DOMContentLoaded', () => {
       card.innerHTML = `
         <!-- 第一行：資產選擇與說明標籤 (手機自動斷行) -->
         <div class="flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 sm:gap-3">
-          <div class="flex-1 min-w-[200px]">
+          <div class="flex-1 min-w-[170px]">
             <select class="asset-key-select w-full bg-white border border-slate-300 text-xs sm:text-sm font-bold text-slate-900 rounded-xl p-2 sm:p-2.5 focus:ring-blue-500 shadow-2xs dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100" data-idx="${idx}">
               ${optionsHtml}
             </select>
           </div>
-          <div class="flex items-center gap-1 sm:gap-1.5 text-[11px] sm:text-xs font-bold text-slate-600 bg-white px-2.5 py-1.5 rounded-xl border border-slate-200 shrink-0 dark:text-slate-400 dark:bg-slate-800 dark:border-slate-700">
+          <div class="flex items-center gap-1 sm:gap-1.5 text-[11px] sm:text-xs font-bold text-slate-600 bg-white px-2.5 py-1.5 rounded-xl border border-slate-200 shrink-0 whitespace-nowrap dark:text-slate-400 dark:bg-slate-800 dark:border-slate-700">
             <span>年化 ${(asset.expectedReturn * 100).toFixed(1)}%</span>
             <span>‧</span>
             <span>波動 ${(asset.stdev * 100).toFixed(1)}%</span>
@@ -1865,9 +1867,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
           <div class="flex items-center justify-end gap-1.5 shrink-0">
             <button type="button" class="btn-weight-adjust px-2.5 py-1 sm:py-1.5 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-800 text-xs font-bold rounded-lg transition dark:bg-slate-800 dark:hover:bg-slate-600 dark:active:bg-slate-600 dark:text-slate-200" data-idx="${idx}" data-delta="-5">-5%</button>
-            <div class="flex items-center rounded-lg border border-blue-200 bg-blue-50/50 overflow-hidden w-20 sm:w-24 dark:border-blue-800/50 dark:bg-blue-950/20">
+            <div class="flex items-center rounded-lg border border-blue-200 bg-blue-50/50 overflow-hidden w-24 sm:w-28 min-w-[88px] dark:border-blue-800/50 dark:bg-blue-950/20">
               <input type="number" class="asset-weight-input w-full px-1.5 py-1 bg-transparent text-sm sm:text-base font-black text-blue-700 text-right focus:outline-none dark:text-blue-400" min="0" max="100" step="1" value="${asset.weight}" data-idx="${idx}">
-              <span class="px-1.5 text-xs font-black text-blue-500">%</span>
+              <span class="px-1.5 text-xs font-black text-blue-500 shrink-0">%</span>
             </div>
             <button type="button" class="btn-weight-adjust px-2.5 py-1 sm:py-1.5 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-800 text-xs font-bold rounded-lg transition dark:bg-slate-800 dark:hover:bg-slate-600 dark:active:bg-slate-600 dark:text-slate-200" data-idx="${idx}" data-delta="5">+5%</button>
           </div>

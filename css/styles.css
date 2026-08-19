@@ -4,15 +4,26 @@
 
 html {
   font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+  -moz-text-size-adjust: 100%;
+  text-size-adjust: 100%;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 body {
-  font-family: 'Plus Jakarta Sans', 'Noto Sans TC', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", system-ui, sans-serif;
   font-size: 1rem;
   line-height: 1.6;
   background-color: #f8fafc;
+  word-break: normal;
+  overflow-wrap: break-word;
+}
+
+/* 數字對齊 (避免數字跳動與不等寬變形) */
+input, select, table, .tabular-nums, #kpi-cards-grid {
+  font-variant-numeric: tabular-nums lining-nums;
 }
 
 /* 強化版卡片外框 (邊框加深、層次分明) */
@@ -221,15 +232,8 @@ input[type="number"] {
   overscroll-behavior-x: contain !important;
 }
 
-/* 防止 iOS Safari 在輸入框 focus 時自動放大畫面 (要求 >= 16px) */
+/* 手機版排版調整 */
 @media (max-width: 768px) {
-  input[type="text"],
-  input[type="number"],
-  select,
-  textarea {
-    font-size: 16px !important;
-  }
-
   /* 消除手機點擊時的藍色高亮灰色陰影 */
   * {
     -webkit-tap-highlight-color: transparent;
@@ -244,6 +248,17 @@ input[type="number"] {
   /* 主內容容器底部留白，避免被浮動手機捷徑列遮擋 */
   #main-content {
     padding-bottom: 5.5rem !important;
+  }
+
+  /* 防止表格過寬擠壓文字 */
+  table {
+    word-break: keep-all;
+    white-space: nowrap;
+  }
+
+  /* 文字標籤防擠壓斷行 */
+  label {
+    line-height: 1.35;
   }
 }
 
