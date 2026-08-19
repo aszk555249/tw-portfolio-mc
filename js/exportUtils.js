@@ -39,7 +39,7 @@ const ExportUtils = {
         const typeName = p.type === 'personal_loan' ? '信貸 (本息均攤)' : (p.type === 'stock_pledge' ? '股票質押 (只繳息)' : '期貨保證金槓桿');
         const modeName = p.repaymentMode === 'amortization' ? '本息攤還' : (p.repaymentMode === 'rollover' ? '到期展延/只繳息' : '到期一次還本');
         const sourceName = p.cashflowSource === 'portfolio' ? '投組自償' : '外部自付';
-        csvContent += `"${p.name || typeName}",${typeName},${p.amount},${((p.interestRate || 0) * 100).toFixed(2)}%,第 ${p.startYear || 1} 年,${p.durationYears || 1} 年,${modeName},${sourceName}\r\n`;
+        csvContent += `"${p.name || typeName}",${typeName},${p.amount},${((p.interestRate || 0) * 100).toFixed(3)}%,第 ${p.startYear || 1} 年,${p.durationYears || 1} 年,${modeName},${sourceName}\r\n`;
       });
     }
 

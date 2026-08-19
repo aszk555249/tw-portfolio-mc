@@ -1541,7 +1541,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const type = plan.type || 'personal_loan';
       const amount = parseFloat(plan.amount) || 0;
-      const ratePct = ((parseFloat(plan.interestRate) || 0) * 100).toFixed(2);
+      const ratePct = Number(((parseFloat(plan.interestRate) || 0) * 100).toFixed(3));
       const startYear = parseInt(plan.startYear) || 1;
       const duration = parseInt(plan.durationYears) || 7;
       const repaymentMode = plan.repaymentMode || (type === 'personal_loan' ? 'amortization' : 'rollover');
@@ -1594,7 +1594,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="col-span-6 sm:col-span-3">
             <label class="text-slate-600 font-bold block mb-1 dark:text-slate-400">年利率 / 資金成本 (%)</label>
             <div class="flex items-center rounded-lg border border-slate-300 overflow-hidden dark:border-slate-600 dark:bg-slate-900">
-              <input type="number" step="0.05" min="0" max="25" value="${ratePct}" class="debt-field w-full p-1.5 font-bold text-slate-900 bg-transparent focus:outline-none dark:text-slate-100" data-idx="${idx}" data-prop="interestRate">
+              <input type="number" step="0.001" min="0" max="50" value="${ratePct}" class="debt-field w-full p-1.5 font-bold text-slate-900 bg-transparent focus:outline-none dark:text-slate-100" data-idx="${idx}" data-prop="interestRate">
               <span class="px-2 text-slate-500 font-bold text-xs">%</span>
             </div>
           </div>
