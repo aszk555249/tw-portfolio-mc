@@ -188,7 +188,7 @@ class MonteCarloEngine {
           const correlatedZ = this._multiplyCholesky(choleskyMatrix, z);
           assetReturns = normalizedAssets.map((a, idx) => {
             let drift = a.expectedReturn - 0.5 * Math.pow(a.stdev, 2);
-            let diffusion = a.stdev * correlatedZ[idx];
+            let diffusion = correlatedZ[idx];
 
             // 報酬順序壓力測試：前 2 年遭遇 -2 個標準差衝擊
             if (sequenceRisk === 'stress_early' && y <= 2) {
@@ -470,11 +470,6 @@ class MonteCarloEngine {
       debtTrajectoriesReal[t] = trialDebtRealArr;
       yearlyCashflowsNominal[t] = trialCashflowNom;
       yearlyCashflowsReal[t] = trialCashflowReal;
-      maxDrawdownsWithCashflow[t] = maxDDWithCashflow;
-      maxDrawdownsPureAsset[t] = maxDDPureAsset;
-      endingNominalBalances[t] = trialNominal[years];
-      endingRealBalances[t] = trialReal[years];
-      if (isRuined) ruinYears.push(ruinedYear);
       maxDrawdownsWithCashflow[t] = maxDDWithCashflow;
       maxDrawdownsPureAsset[t] = maxDDPureAsset;
       endingNominalBalances[t] = trialNominal[years];
