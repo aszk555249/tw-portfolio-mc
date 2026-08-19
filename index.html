@@ -39,66 +39,68 @@
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen text-base transition-colors duration-200">
 
-  <!-- 頂部導航列 (寬螢幕高資訊密度版面) -->
-  <header class="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-slate-200 shadow-sm no-print">
-    <div class="max-w-[1700px] w-full mx-auto px-4 sm:px-6 xl:px-8 h-16 sm:h-20 flex items-center justify-between">
-      <div class="flex items-center space-x-3">
-        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20 shrink-0">
-          <i data-lucide="trending-up" class="w-6 h-6 sm:w-7 sm:h-7"></i>
+  <!-- 頂部導航列 (完美適配手機與寬螢幕版面) -->
+  <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-xs no-print">
+    <div class="max-w-[1700px] w-full mx-auto px-3.5 sm:px-6 xl:px-8 py-2.5 sm:py-3.5 flex items-center justify-between gap-2.5">
+      <!-- 頂部左側：Logo + 標題 -->
+      <div class="flex items-center gap-2.5 min-w-0 flex-1">
+        <div class="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20 shrink-0">
+          <i data-lucide="trending-up" class="w-5 h-5 sm:w-6 sm:h-6"></i>
         </div>
-        <div>
-          <h1 class="text-lg sm:text-2xl font-black text-slate-900 flex items-center gap-2">
-            <span>台灣投資組合蒙地卡羅模擬器</span>
-            <span class="text-xs sm:text-sm bg-blue-100 text-blue-800 font-bold px-2.5 py-0.5 rounded-full">Portfolio Visualizer 旗艦對標</span>
-          </h1>
-          <p class="text-xs sm:text-sm text-slate-500 hidden md:block font-medium">多時期現金流排程 ‧ 存活率曲線 ‧ 完整量化績效總表 ‧ 實質通膨折算</p>
+        <div class="min-w-0 flex-1">
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <h1 class="text-sm sm:text-xl font-black text-slate-900 leading-tight">
+              台灣投資組合蒙地卡羅模擬器
+            </h1>
+            <span class="text-[10px] sm:text-xs bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded-full whitespace-nowrap hidden xs:inline-block">旗艦對標</span>
+          </div>
+          <p class="text-[11px] text-slate-500 hidden md:block font-medium mt-0.5">多時期現金流排程 ‧ 存活率曲線 ‧ 完整量化績效總表 ‧ 實質通膨折算</p>
         </div>
       </div>
 
       <!-- 右側功能快捷列 -->
-      <div class="flex items-center space-x-2 sm:space-x-3">
+      <div class="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
         <!-- 幣別切換 -->
-        <div class="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs sm:text-sm font-semibold">
-          <button id="btn-curr-twd" class="px-3 py-1.5 rounded-lg bg-white text-blue-600 shadow-xs font-bold transition-all">NT$ 台幣</button>
-          <button id="btn-curr-usd" class="px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition-all">USD 美元</button>
+        <div class="flex items-center bg-slate-100 p-0.5 sm:p-1 rounded-xl border border-slate-200 text-xs sm:text-sm font-bold">
+          <button id="btn-curr-twd" class="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-white text-blue-600 shadow-xs font-black text-xs sm:text-sm transition-all">NT$ 台幣</button>
+          <button id="btn-curr-usd" class="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-slate-600 hover:text-slate-900 text-xs sm:text-sm transition-all">USD 美元</button>
         </div>
 
-        <!-- 匯出 CSV -->
-        <button id="btn-export-csv" title="匯出完整 CSV 報表" class="flex items-center gap-1.5 px-3.5 py-1.5 sm:py-2 text-xs sm:text-sm font-bold text-slate-700 bg-white border border-slate-300 rounded-xl hover:bg-slate-50 shadow-2xs transition">
+        <!-- 匯出 CSV (手機版縮為圖示按鈕) -->
+        <button id="btn-export-csv" title="匯出完整 CSV 報表" class="flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 sm:py-2 text-xs sm:text-sm font-bold text-slate-700 bg-white border border-slate-300 rounded-xl hover:bg-slate-50 shadow-2xs transition">
           <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-600"></i>
-          <span class="hidden md:inline">匯出 CSV</span>
+          <span class="hidden sm:inline">匯出 CSV</span>
         </button>
 
-        <!-- 列印 / 產生 PDF -->
-        <button id="btn-print-report" title="列印或另存為 PDF 報告" class="flex items-center gap-1.5 px-3.5 py-1.5 sm:py-2 text-xs sm:text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-md shadow-blue-500/20 transition">
+        <!-- 列印 / 產生 PDF (手機版縮為圖示按鈕) -->
+        <button id="btn-print-report" title="列印或另存為 PDF 報告" class="flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 sm:py-2 text-xs sm:text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-md shadow-blue-500/20 transition">
           <i data-lucide="printer" class="w-4 h-4"></i>
-          <span class="hidden md:inline">列印 / PDF</span>
+          <span class="hidden sm:inline">列印 / PDF</span>
         </button>
       </div>
     </div>
   </header>
 
-  <!-- 通膨實質購買力重要提示與一鍵切換 Bar (寬版容器) -->
-  <div class="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 text-white shadow-inner py-2.5 px-4 sm:px-6 xl:px-8">
-    <div class="max-w-[1700px] w-full mx-auto flex flex-col md:flex-row items-center justify-between gap-2.5 text-xs sm:text-sm">
-      <div class="flex items-center gap-2">
+  <!-- 通膨實質購買力重要提示與一鍵切換 Bar (手機滿版舒適排版) -->
+  <div class="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 text-white shadow-inner py-2 px-3.5 sm:px-6 xl:px-8">
+    <div class="max-w-[1700px] w-full mx-auto flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 text-xs">
+      <div class="flex items-center gap-1.5 text-xs">
         <span class="p-1 rounded-lg bg-blue-500/25 text-blue-300 shrink-0">
-          <i data-lucide="shield-alert" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+          <i data-lucide="shield-alert" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
         </span>
-        <div>
-          <span class="font-bold text-amber-300">【通膨實質購買力模式】</span>
-          <span id="inflation-banner-text" class="text-slate-200">目前處於「實質購買力 (扣除通膨)」模式，所有金額已換算為今日貨幣價值。</span>
+        <div class="leading-tight">
+          <span class="font-bold text-amber-300">【實質購買力模式】</span>
+          <span id="inflation-banner-text" class="text-[11px] sm:text-xs text-slate-200">已扣除通膨，換算為今日貨幣實質價值。</span>
         </div>
       </div>
 
-      <!-- 快速切換開關 -->
-      <div class="flex items-center gap-1.5 bg-black/40 p-1 rounded-xl border border-white/15 shrink-0">
-        <span class="text-slate-300 px-1 text-xs sm:text-sm font-medium">呈現基準：</span>
-        <button id="toggle-real" class="px-3.5 py-1 rounded-lg bg-blue-500 text-white font-bold transition-all shadow-sm">
-          實質購買力 (已扣除通膨)
+      <!-- 快速切換開關 (手機並排平分寬度，按鈕更大更好點) -->
+      <div class="grid grid-cols-2 sm:flex sm:items-center gap-1 bg-black/40 p-1 rounded-xl border border-white/15 shrink-0 text-center">
+        <button id="toggle-real" class="px-2.5 sm:px-3.5 py-1.5 sm:py-1 rounded-lg bg-blue-500 text-white font-bold text-[11px] sm:text-xs transition-all shadow-sm">
+          實質購買力 (扣通膨)
         </button>
-        <button id="toggle-nominal" class="px-3.5 py-1 rounded-lg text-slate-300 hover:text-white font-semibold transition-all">
-          名目金額 (未扣通膨)
+        <button id="toggle-nominal" class="px-2.5 sm:px-3.5 py-1.5 sm:py-1 rounded-lg text-slate-300 hover:text-white font-semibold text-[11px] sm:text-xs transition-all">
+          名目金額 (未扣)
         </button>
       </div>
     </div>
